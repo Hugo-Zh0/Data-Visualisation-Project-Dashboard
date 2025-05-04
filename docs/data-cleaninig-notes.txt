@@ -1,0 +1,58 @@
+Data Cleaning Notes for Mobile Phone Usage Fines Dataset
+Prepared by: Hugo
+Date: 13/04/2025
+
+1. Data Source
+---------------
+Original dataset obtained from the Department of Infrastructure, Transport (2023), compiled from various state and territory police agencies. The data includes monthly enforcement records, fines, charges, arrests, and detection methods.
+
+2. Tools Used
+---------------
+Data was processed using KNIME Analytics Platform. The KNIME workflow applied includes:
+- File Reader node (CSV input)
+- Row Filter
+- Group By for summarisation
+- Column Filter
+- String Manipulation
+- Missing Value Handler
+
+3. Cleaning Objectives
+-----------------------
+Focus on mobile phone non-compliance fines only  
+Prepare data for accurate year-by-year jurisdictional comparison  
+Ensure uniform formatting and field naming for visualisation
+
+4. Key Transformations & Filters
+---------------------------------
+Filtered rows to keep only records related to "Mobile Phone Non-Compliance Fines"  
+Removed rows with missing or null jurisdiction/state values  
+Replaced "Unknown" or blank detection method values with "Other"  
+Combined 'Fines' and 'Charges' where fines were unavailable (e.g., ACT, QLD)  
+Converted all date fields to YYYY-MM format where applicable  
+Ensured consistency in 'Jurisdiction' naming (e.g., "New South Wales" vs "NSW")  
+Merged multiple detection method categories into simplified types: "Police", "Camera", "Other"
+
+5. Fields Removed
+------------------
+- Arrest-related columns (not applicable to mobile phone offences)
+- Drug and breath test columns
+- Fields with >80% missing values
+
+6. Data Limitations & Notes
+----------------------------
+ACT uses "Charges" instead of fines as a proxy  
+VIC does not provide fines/charges — detection-only  
+TAS has missing data for 2020–2022  
+NT 2023 data is incomplete  
+NSW includes both police- and camera-issued fines, potentially inflating totals  
+
+These limitations are accounted for in visual annotations and documentation on the dashboard.
+
+7. Output
+----------
+Final cleaned dataset saved as:
+`cleaned_data_police_enforcement.csv`
+
+This dataset is used for all D3.js visualisations in the dashboard.
+
+--------------------------
