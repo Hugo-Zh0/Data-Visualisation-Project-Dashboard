@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mobile Phone Usage Fines Dashboard</title>
+  <link rel="stylesheet" href="css/dashboard.css" />
+</head>
+<body>
+
+  <!-- 🔗 Navigation -->
+  <nav class="navbar">
+    <h1>Mobile Phone Fines Dashboard</h1>
+    <div class="nav-links">
+      <a href="index.html">User Story</a>
+      <a href="dashboard.html" class="active">Dashboard</a>
+    </div>
+  </nav>
+
+  <!-- 📊 KPI Summary Section -->
+  <section id="summary-cards" class="dashboard-section">
+    <!-- Summary cards will be rendered here by summaryCards.js -->
+  </section>
+
+  <!-- 📈 Line Chart Section -->
+  <section id="line-chart" class="dashboard-section">
+    <h2>Fines Over Time (2008–2023)</h2>
+    <div id="lineChartContainer"></div>
+  </section>
+
+  <!-- 📊 Bar Chart Section -->
+  <section id="bar-chart" class="dashboard-section">
+    <h2>Fines per 10,000 Licence Holders by Jurisdiction</h2>
+    <div id="barChartContainer"></div>
+  </section>
+
+  <!-- 🔵 Dot Plot or Detection Breakdown -->
+  <section id="dot-plot" class="dashboard-section">
+    <h2>Detection Method Breakdown by Jurisdiction</h2>
+    <div id="dotPlotContainer"></div>
+  </section>
+
+  <!-- 📋 Data Table Section (optional) -->
+  <section id="data-table" class="dashboard-section">
+    <h2>Filtered Data Table (Coming Soon)</h2>
+    <div id="tableContainer"></div>
+  </section>
+
+  <!-- 📜 Footer -->
+  <footer>
+    <p>&copy; 2025 Hugo Tian Le Zhou – Mobile Phone Usage Fines Dashboard</p>
+  </footer>
+
+  <!-- 🧠 D3.js and Chart Scripts -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="js/summaryCards.js"></script>
+  <script src="js/lineChart.js"></script>
+  <script src="js/barChart.js"></script>
+  <script src="js/dotPlot.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
