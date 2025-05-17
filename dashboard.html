@@ -17,30 +17,58 @@
     </div>
   </nav>
 
-  <!-- Summary Section -->
-  <section id="summary-cards" class="dashboard-section">
- 
-  </section>
+  <!-- Filter Controls -->
+  <div class="filter-bar">
+    <label for="jurisdictionFilter">Select jurisdiction</label>
+    <select id="jurisdictionFilter">
+      <option value="All">All</option>
+      <!-- JS will populate options -->
+    </select>
 
-  <!-- Line Chart Section -->
-  <section id="line-chart" class="dashboard-section">
-    <h2>Fines Over Time (2008–2023)</h2>
-    <div id="lineChartContainer"></div>
-  </section>
+    <label for="yearFilter">Select year</label>
+    <select id="yearFilter">
+      <option value="2023">2023</option>
+      <!-- JS can add more years if needed -->
+    </select>
 
-  <!-- Bar Chart Section -->
-  <section id="bar-chart" class="dashboard-section">
-    <h2>Detection Method Used Over Time</h2>
-    <div id="barChartContainer"></div>
-  </section>
+    <label for="detectionMethodFilter">Select detection method</label>
+    <select id="detectionMethodFilter">
+      <option value="All">All</option>
+      <!-- JS will populate options -->
+    </select>
 
-  <!-- 🔵 Dot Plot or Detection Breakdown -->
-  <section id="donut-chart" class="dashboard-section">
-    <h2>Detection Method Breakdown</h2>
-    <div id="donutChartContainer"></div>
-  </section>
+    <button id="resetFilters">RESET VIEW</button>
+  </div>
 
-  <!-- Data Table Section (optional) -->
+  <!-- Dashboard Grid Layout -->
+  <div class="dashboard-grid">
+
+    <!-- Summary Cards (left) -->
+    <div id="summary-cards" class="dashboard-section">
+      <!-- JS will render summary cards here -->
+    </div>
+
+    <!-- Line Chart (top-right) -->
+    <div id="line-chart" class="dashboard-section">
+      <h2>Fines Over Time (2008–2023)</h2>
+      <div id="lineChartContainer"></div>
+    </div>
+
+    <!-- Donut Chart (bottom-left) -->
+    <div id="donut-chart" class="dashboard-section">
+      <h2>Detection Method Breakdown</h2>
+      <div id="donutChartContainer"></div>
+    </div>
+
+    <!-- Bar Chart (bottom-right) -->
+    <div id="bar-chart" class="dashboard-section">
+      <h2>Detection Method Used Over Time</h2>
+      <div id="barChartContainer"></div>
+    </div>
+
+  </div>
+
+  <!-- Optional Data Table Section -->
   <section id="data-table" class="dashboard-section">
     <h2>Filtered Data Table</h2>
     <div id="tableContainer"></div>
@@ -51,7 +79,7 @@
     <p>&copy; 2025 Hugo & Harron Group Task – Mobile Phone Usage Fines Dashboard</p>
   </footer>
 
-  <!-- D3.js and Chart Script -->
+  <!-- D3.js and Chart Scripts -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="js/summaryCards.js"></script>
   <script src="js/lineChart.js"></script>
