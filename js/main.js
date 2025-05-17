@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     updateSummaryCards(year, jurisdiction, method);
     updateDonut(year, jurisdiction);
-    // You can add updateLineChart and updateBarChart here if needed
+    updateLineChart(year, jurisdiction, method);
   }
 
   function resetFilters() {
