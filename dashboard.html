@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mobile Phone Usage Fines Dashboard</title>
   <link rel="stylesheet" href="css/dashboard.css" />
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="js/main.js"></script>
 </head>
 <body>
 
@@ -54,16 +56,17 @@
       <div id="lineChartContainer"></div>
     </div>
 
-    <!-- Donut Chart (bottom-left) -->
-    <div id="donut-chart" class="dashboard-section">
-      <h2>Detection Method Breakdown</h2>
-      <div id="donutChartContainer"></div>
-    </div>
+    <!-- Detection Charts Row -->
+    <div class="detection-row">
+      <div id="donut-chart" class="dashboard-section">
+        <h2>Detection Method Breakdown</h2>
+        <div id="donutChartContainer"></div>
+      </div>
 
-    <!-- Bar Chart (bottom-right) -->
-    <div id="bar-chart" class="dashboard-section">
-      <h2>Detection Method Used Over Time</h2>
-      <div id="barChartContainer"></div>
+      <div id="bar-chart" class="dashboard-section">
+        <h2>Detection Method Used Over Time</h2>
+        <div id="barChartContainer"></div>
+      </div>
     </div>
 
   </div>
@@ -80,11 +83,8 @@
   </footer>
 
   <!-- D3.js and Chart Scripts -->
-  <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="js/summaryCards.js"></script>
   <script src="js/lineChart.js"></script>
   <script src="js/barChart.js"></script>
-  <script src="js/dotPlot.js"></script>
-  <script src="js/main.js"></script>
 </body>
 </html>
