@@ -32,7 +32,6 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
     });
   }
 
-  // Tooltip
   const tooltip = d3.select("body")
     .append("div")
     .attr("class", "donut-tooltip")
@@ -62,6 +61,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
     }
 
     d3.select("#donutChartContainer").select("svg")?.remove();
+    d3.select("#donutChartContainer").select(".no-data-warning")?.remove();
 
     const width = 800;
     const height = 300;
@@ -108,6 +108,19 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       );
       pieData = Object.fromEntries(grouped);
       chartLabel = `Detection Methods in ${selectedYear}`;
+    }
+
+    // 🔴 No data check
+    if (!pieData || Object.keys(pieData).length === 0 || d3.sum(Object.values(pieData)) === 0) {
+      d3.select("#donutChartContainer")
+        .append("div")
+        .attr("class", "no-data-warning")
+        .style("color", "red")
+        .style("font-weight", "bold")
+        .style("padding", "1rem")
+        .style("text-align", "center")
+        .text("⚠ No data found for this selection.");
+      return;
     }
 
     d3.select("#donut-chart h2").text(chartLabel);

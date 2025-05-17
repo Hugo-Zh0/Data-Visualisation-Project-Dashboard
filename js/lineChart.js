@@ -1,5 +1,3 @@
-// js/lineChart.js
-
 let updateLineChart;
 
 d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data => {
@@ -50,9 +48,23 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
 
     totals = totals.sort((a, b) => a.YEAR - b.YEAR);
 
-    // Clear chart
+    // Clear chart and warning
     d3.select("#lineChartContainer").select("svg")?.remove();
     d3.select("#lineChartContainer").select("div")?.remove();
+    d3.select("#lineChartContainer").select(".no-data-warning")?.remove();
+
+    // If no data found, show message
+    if (!totals || totals.length === 0 || d3.sum(totals.map(d => d.FINES)) === 0) {
+      d3.select("#lineChartContainer")
+        .append("div")
+        .attr("class", "no-data-warning")
+        .style("color", "red")
+        .style("font-weight", "bold")
+        .style("padding", "1rem")
+        .style("text-align", "center")
+        .text("⚠ No data found for this selection.");
+      return;
+    }
 
     const margin = { top: 40, right: 50, bottom: 70, left: 70 };
     const width = 800 - margin.left - margin.right;
@@ -139,7 +151,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
         tooltip.transition().duration(150).style("opacity", 1);
         tooltip.html(
           `<strong>Year:</strong> ${d.YEAR}<br>
-          <strong>Fines:</strong> ${d.FINES.toLocaleString()}${isSelected ? "<br><em>(Selected)</em>" : ""}`
+           <strong>Fines:</strong> ${d.FINES.toLocaleString()}${isSelected ? "<br><em>(Selected)</em>" : ""}`
         )
           .style("left", (event.pageX + 10) + "px")
           .style("top", (event.pageY - 30) + "px");
@@ -148,7 +160,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
         tooltip.transition().duration(200).style("opacity", 0);
       });
 
-    // 🟢 Legend preserved
+    // 🟢 Legend
     svg.append("rect")
       .attr("x", width - 130)
       .attr("y", -10)

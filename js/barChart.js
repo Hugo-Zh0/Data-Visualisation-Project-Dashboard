@@ -1,5 +1,3 @@
-// js/barChart.js
-
 let updateBarChart;
 
 d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data => {
@@ -28,6 +26,20 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
 
     d3.select("#barChartContainer").select("svg")?.remove();
     d3.select("#barChartContainer").select("div")?.remove();
+    d3.select("#barChartContainer").select(".no-data-warning")?.remove();
+
+    // 🔴 No data check
+    if (!grouped || grouped.length === 0 || d3.sum(grouped.map(d => d.FINES)) === 0) {
+      d3.select("#barChartContainer")
+        .append("div")
+        .attr("class", "no-data-warning")
+        .style("color", "red")
+        .style("font-weight", "bold")
+        .style("padding", "1rem")
+        .style("text-align", "center")
+        .text("⚠ No data found for this selection.");
+      return;
+    }
 
     const margin = { top: 40, right: 30, bottom: 70, left: 80 };
     const width = 500 - margin.left - margin.right;
