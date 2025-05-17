@@ -6,8 +6,7 @@ d3.csv("data/mobile_fines_by_year.csv").then(data => {
     d.FINES = +d.FINES;
   });
 
-  // Slightly smaller height to avoid cutting off chart at bottom
-  const margin = { top: 30, right: 40, bottom: 60, left: 60 };
+  const margin = { top: 40, right: 50, bottom: 70, left: 70 };
   const width = 800 - margin.left - margin.right;
   const height = 240 - margin.top - margin.bottom;
 
@@ -17,7 +16,6 @@ d3.csv("data/mobile_fines_by_year.csv").then(data => {
     .attr("preserveAspectRatio", "xMidYMid meet")
     .style("width", "100%")
     .style("height", "auto")
-    .style("display", "block")
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -33,6 +31,7 @@ d3.csv("data/mobile_fines_by_year.csv").then(data => {
     .x(d => x(d.YEAR))
     .y(d => y(d.FINES));
 
+  // Axes
   svg.append("g")
     .attr("transform", `translate(0,${height})`)
     .call(d3.axisBottom(x).tickFormat(d3.format("d")));
@@ -40,6 +39,21 @@ d3.csv("data/mobile_fines_by_year.csv").then(data => {
   svg.append("g")
     .call(d3.axisLeft(y));
 
+  // Axis Labels
+  svg.append("text")
+    .attr("text-anchor", "middle")
+    .attr("x", width / 2)
+    .attr("y", height + 50)
+    .text("Year");
+
+  svg.append("text")
+    .attr("text-anchor", "middle")
+    .attr("transform", `rotate(-90)`)
+    .attr("x", -height / 2)
+    .attr("y", -50)
+    .text("Total Fines (Mobile Phone Use)");
+
+  // Line path
   svg.append("path")
     .datum(data)
     .attr("fill", "none")
@@ -47,12 +61,49 @@ d3.csv("data/mobile_fines_by_year.csv").then(data => {
     .attr("stroke-width", 2)
     .attr("d", line);
 
+  // Tooltip
+  const tooltip = d3.select("#lineChartContainer")
+    .append("div")
+    .style("position", "absolute")
+    .style("background", "white")
+    .style("padding", "6px 10px")
+    .style("border", "1px solid #ccc")
+    .style("border-radius", "4px")
+    .style("font-size", "13px")
+    .style("pointer-events", "none")
+    .style("opacity", 0);
+
+  // Dots
   svg.selectAll("circle")
     .data(data)
     .enter()
     .append("circle")
     .attr("cx", d => x(d.YEAR))
     .attr("cy", d => y(d.FINES))
-    .attr("r", 3)
+    .attr("r", 5)
+    .attr("fill", "#007acc")
+    .on("mouseover", (event, d) => {
+      tooltip.transition().duration(150).style("opacity", 1);
+      tooltip.html(`<strong>Year:</strong> ${d.YEAR}<br><strong>Fines:</strong> ${d.FINES.toLocaleString()}`)
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 30) + "px");
+    })
+    .on("mouseout", () => {
+      tooltip.transition().duration(200).style("opacity", 0);
+    });
+
+  // Legend
+  svg.append("rect")
+    .attr("x", width - 130)
+    .attr("y", -10)
+    .attr("width", 15)
+    .attr("height", 15)
     .attr("fill", "#007acc");
+
+  svg.append("text")
+    .attr("x", width - 110)
+    .attr("y", 2)
+    .text("Mobile Phone Fines")
+    .style("font-size", "12px")
+    .attr("alignment-baseline", "middle");
 });
