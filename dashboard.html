@@ -10,50 +10,47 @@
 </head>
 <body>
 
-  <!-- Navigation -->
-  <nav class="navbar">
-    <h1>Mobile Phone Fines Dashboard</h1>
-    <div class="nav-links">
-      <a href="index.html">User Story</a>
-      <a href="dashboard.html" class="active">Dashboard</a>
-    </div>
-  </nav>
-
-  <!-- Filter Controls -->
-  <div class="filter-bar">
-    <label for="jurisdictionFilter">Select jurisdiction</label>
-    <select id="jurisdictionFilter">
-      <option value="All">All</option>
-      <!-- JS will populate options -->
-    </select>
-
-    <label for="yearFilter">Select year</label>
-    <select id="yearFilter">
-      <option value="All">All</option>
-      <!-- JS can add more years if needed -->
-    </select>
-
-    <label for="detectionMethodFilter">Select detection method</label>
-    <select id="detectionMethodFilter">
-      <option value="All">All</option>
-      <!-- JS will populate options -->
-    </select>
-
-    <button id="resetFilters">RESET VIEW</button>
+<!-- Navigation -->
+<nav class="navbar">
+  <h1>Mobile Phone Fines Dashboard</h1>
+  <div class="nav-links">
+    <a href="index.html">User Story</a>
+    <a href="dashboard.html" class="active">Dashboard</a>
   </div>
+</nav>
 
-  <div class="dashboard-grid">
+<!-- Filter Controls -->
+<div class="filter-bar">
+  <label for="jurisdictionFilter">Select jurisdiction</label>
+  <select id="jurisdictionFilter">
+    <option value="All">All</option>
+  </select>
 
-  <!-- Summary (Left) -->
+  <label for="yearFilter">Select year</label>
+  <select id="yearFilter">
+    <option value="All">All</option>
+  </select>
+
+  <label for="methodFilter">Select detection method</label>
+  <select id="methodFilter">
+    <option value="All">All Methods</option>
+    <option value="Police issued">Police issued</option>
+    <option value="Mobile camera">Mobile camera</option>
+    <option value="Other">Other</option>
+  </select>
+
+  <button id="resetFilters">RESET VIEW</button>
+</div>
+
+<!-- Dashboard Grid -->
+<div class="dashboard-grid">
   <div id="summary-cards"></div>
 
-  <!-- Line Chart (Top Right) -->
   <div id="line-chart">
     <h2>Fines Over Time (2008–2023)</h2>
     <div id="lineChartContainer"></div>
   </div>
 
-  <!-- Bottom Right (Donut + Bar) -->
   <div id="bottom-row">
     <div id="donut-chart">
       <h2>Detection Method Breakdown</h2>
@@ -64,18 +61,15 @@
       <div id="barChartContainer"></div>
     </div>
   </div>
-
 </div>
 
+<footer>
+  <p>&copy; 2025 Hugo & Harron Group Task – Mobile Phone Usage Fines Dashboard</p>
+</footer>
 
-
-  <footer>
-    <p>&copy; 2025 Hugo & Harron Group Task – Mobile Phone Usage Fines Dashboard</p>
-  </footer>
-
-  <script src="js/summaryCards.js"></script>
-  <script src="js/lineChart.js"></script>
-  <script src="js/barChart.js"></script>
-  <script src="js/donutChart.js"></script>
+<script src="js/summaryCards.js"></script>
+<script src="js/lineChart.js"></script>
+<script src="js/barChart.js"></script>
+<script src="js/donutChart.js"></script>
 </body>
 </html>

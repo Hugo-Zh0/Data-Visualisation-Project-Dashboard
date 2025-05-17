@@ -46,6 +46,28 @@ body {
   align-items: center;
 }
 
+/* Reset Button Styling */
+#resetFilters {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+#resetFilters:hover {
+  background-color: #c0392b;
+}
+
+#resetFilters:active {
+  background-color: #a93226;
+  transform: scale(0.97);
+}
+
+
 .filter-bar select,
 .filter-bar button {
   padding: 0.4rem 0.6rem;
