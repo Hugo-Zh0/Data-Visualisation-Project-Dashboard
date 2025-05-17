@@ -18,9 +18,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const { year, jurisdiction, method } = getSelectedValues();
 
     updateSummaryCards(year, jurisdiction, method);
-    updateDonut(year, jurisdiction);
     updateLineChart(year, jurisdiction, method);
     updateBarChart(year, method);
+    updateDonut(year, jurisdiction, method);
   }
 
   function resetFilters() {
