@@ -1,13 +1,14 @@
-/* General reset and fonts */
+/* Reset */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
   background-color: #f9f9f9;
   color: #222;
+  overflow: hidden;
 }
 
-/* Navigation */
+/* Navbar */
 .navbar {
   background-color: #2c3e50;
   color: white;
@@ -15,6 +16,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .navbar h1 {
@@ -37,127 +39,168 @@ body {
 /* Filter Bar */
 .filter-bar {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
-  padding: 1rem 2rem;
+  padding: 0.75rem 2rem;
   background-color: #f0f0f0;
   align-items: center;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-}
-
-.filter-bar label {
-  font-weight: bold;
 }
 
 .filter-bar select,
 .filter-bar button {
   padding: 0.4rem 0.6rem;
-  font-size: 1rem;
+  font-size: 0.95rem;
   border-radius: 4px;
   border: 1px solid #ccc;
 }
 
-/* Grid Layout for Dashboard */
+/* Layout */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1fr 2fr;
-  grid-template-rows: auto 1fr;
+  grid-template-columns: 280px 1fr;
+  grid-template-rows: 45% 52%;
   gap: 1rem;
+  height: calc(100vh - 110px);
   padding: 1rem 2rem;
+  box-sizing: border-box;
 }
 
+/* Summary Cards */
 #summary-cards {
-  grid-column: 1 / 2;
   grid-row: 1 / span 2;
-  background-color: #e0e0e0;
+  background-color: #f4f4f4;
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  overflow-y: auto;
 }
 
-#line-chart {
-  grid-column: 2 / 3;
-  grid-row: 1 / 2;
-  background-color: #f8d7da;
-  padding: 1rem;
-}
-
-#donut-chart {
-  grid-column: 1 / 2;
-  grid-row: 3 / 4;
-  background-color: #343a40;
-  color: white;
-  padding: 1rem;
-}
-
-#bar-chart {
-  grid-column: 2 / 3;
-  grid-row: 2 / 3;
-  background-color: #d4edda;
-  padding: 1rem;
-}
-
-/* Section Layout */
-.dashboard-section {
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.dashboard-section h2 {
-  margin-bottom: 1rem;
-  color: #333;
-}
-
-/* Chart containers */
-#lineChartContainer,
-#barChartContainer,
-#dotPlotContainer,
-#donutChartContainer,
-#tableContainer {
-  height: 400px;
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 1rem;
-}
-
-/* KPI Summary Cards (inside #summary-cards) */
 .summary-card {
   background-color: white;
-  padding: 1rem;
+  padding: 0.75rem;
   border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  text-align: left;
 }
 
 .summary-card h3 {
-  font-size: 1.2rem;
-  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 0.25rem;
 }
 
 .summary-card p {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: bold;
   margin: 0;
+  color: #2c3e50;
 }
 
-.detection-row {
+/* Line Chart */
+#line-chart {
+  background-color: #f8d7da;
+  border-radius: 6px;
+  padding: 1.25rem;
+  overflow: hidden;
   display: flex;
-  flex-direction: row;
-  gap: 1rem;
-  padding: 1rem 2rem;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
-#donut-chart, #bar-chart {
-  flex: 1;
+#lineChartContainer {
+  background-color: white;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  padding: 0.75rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  width: 100%;
+  height: auto;
+  max-height: 260px;
+  margin-top: 0.5rem;
+}
+
+
+/* Bottom Row */
+#bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  height: 100%;
+}
+
+/* Donut & Bar Chart */
+#donut-chart,
+#bar-chart {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+#donut-chart {
+  background-color: #343a40;
+  color: white;
+}
+
+#bar-chart {
+  background-color: #d4edda;
+}
+
+#donutChartContainer,
+#barChartContainer {
+  flex-grow: 1;
+  width: 100%;
+  max-height: 300px;
+  background-color: white;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Make all D3 SVGs responsive */
+svg {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  max-height: 100%;
 }
 
 /* Footer */
 footer {
   text-align: center;
-  padding: 1rem;
+  padding: 0.5rem;
   background-color: #eee;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #555;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    height: auto;
+  }
+
+  #summary-cards {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  #bottom-row {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  #lineChartContainer,
+  #barChartContainer,
+  #donutChartContainer {
+    height: auto;
+    max-height: none;
+  }
 }
