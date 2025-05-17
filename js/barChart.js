@@ -1,128 +1,116 @@
 // js/barChart.js
 
-d3.csv("data/mobile_fines_by_detection_year.csv").then(data => {
+let updateBarChart;
+
+d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data => {
   data.forEach(d => {
     d.YEAR = +d.YEAR;
     d.FINES = +d.FINES;
   });
 
-  const margin = { top: 40, right: 20, bottom: 60, left: 70 };
-  const width = 800 - margin.left - margin.right;
-  const height = 260 - margin.top - margin.bottom;
+  updateBarChart = function (selectedYear = "All", selectedMethod = "All") {
+    let filtered = data;
 
-  const svg = d3.select("#barChartContainer")
-    .append("svg")
-    .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
-    .attr("preserveAspectRatio", "xMidYMid meet")
-    .style("width", "100%")
-    .style("height", "auto")
-    .append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
+    if (selectedYear !== "All") {
+      filtered = filtered.filter(d => d.YEAR === +selectedYear);
+    }
 
-  const methods = Array.from(new Set(data.map(d => d.DETECTION_METHOD)));
-  const years = Array.from(new Set(data.map(d => d.YEAR)));
+    if (selectedMethod !== "All") {
+      filtered = filtered.filter(d => d.DETECTION_METHOD === selectedMethod);
+    }
 
-  const x0 = d3.scaleBand()
-    .domain(years)
-    .range([0, width])
-    .padding(0.2);
+    const grouped = d3.rollups(
+      filtered,
+      v => d3.sum(v, d => d.FINES),
+      d => d.DETECTION_METHOD
+    ).map(([method, total]) => ({ DETECTION_METHOD: method, FINES: total }))
+     .sort((a, b) => b.FINES - a.FINES);
 
-  const x1 = d3.scaleBand()
-    .domain(methods)
-    .range([0, x0.bandwidth()])
-    .padding(0.05);
+    d3.select("#barChartContainer").select("svg")?.remove();
+    d3.select("#barChartContainer").select("div")?.remove();
 
-  const y = d3.scaleLinear()
-    .domain([0, d3.max(data, d => d.FINES)])
-    .nice()
-    .range([height, 0]);
+    const margin = { top: 40, right: 30, bottom: 70, left: 80 };
+    const width = 500 - margin.left - margin.right;
+    const height = 300 - margin.top - margin.bottom;
 
-  const color = d3.scaleOrdinal()
-    .domain(methods)
-    .range(d3.schemeTableau10);
+    const svg = d3.select("#barChartContainer")
+      .append("svg")
+      .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+      .attr("preserveAspectRatio", "xMidYMid meet")
+      .style("width", "100%")
+      .style("height", "auto")
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
 
-  // Axes
-  svg.append("g")
-    .attr("transform", `translate(0,${height})`)
-    .call(d3.axisBottom(x0).tickFormat(d3.format("d")));
+    const x = d3.scaleBand()
+      .domain(grouped.map(d => d.DETECTION_METHOD))
+      .range([0, width])
+      .padding(0.3);
 
-  svg.append("g")
-    .call(d3.axisLeft(y));
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(grouped, d => d.FINES)]).nice()
+      .range([height, 0]);
 
-  // Axis Labels
-  svg.append("text")
-    .attr("text-anchor", "middle")
-    .attr("x", width / 2)
-    .attr("y", height + 45)
-    .text("Year");
+    // Axes
+    svg.append("g")
+      .attr("transform", `translate(0,${height})`)
+      .call(d3.axisBottom(x))
+      .selectAll("text")
+      .attr("transform", "rotate(-20)")
+      .style("text-anchor", "end");
 
-  svg.append("text")
-    .attr("text-anchor", "middle")
-    .attr("transform", `rotate(-90)`)
-    .attr("x", -height / 2)
-    .attr("y", -50)
-    .text("Number of Fines");
+    svg.append("g")
+      .call(d3.axisLeft(y));
 
-  // Tooltip container
-  const tooltip = d3.select("#barChartContainer")
-    .append("div")
-    .style("position", "absolute")
-    .style("background", "white")
-    .style("padding", "6px 10px")
-    .style("border", "1px solid #ccc")
-    .style("border-radius", "4px")
-    .style("font-size", "13px")
-    .style("pointer-events", "none")
-    .style("opacity", 0);
+    // Axis Labels
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", height + 50)
+      .attr("text-anchor", "middle")
+      .text("Detection Method");
 
-  const grouped = d3.groups(data, d => d.YEAR);
+    svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -height / 2)
+      .attr("y", -60)
+      .attr("text-anchor", "middle")
+      .text("Number of Fines");
 
-  svg.selectAll("g.year")
-    .data(grouped)
-    .enter()
-    .append("g")
-    .attr("class", "year")
-    .attr("transform", d => `translate(${x0(d[0])},0)`)
-    .selectAll("rect")
-    .data(d => d[1])
-    .enter()
-    .append("rect")
-    .attr("x", d => x1(d.DETECTION_METHOD))
-    .attr("y", d => y(d.FINES))
-    .attr("width", x1.bandwidth())
-    .attr("height", d => height - y(d.FINES))
-    .attr("fill", d => color(d.DETECTION_METHOD))
-    .on("mouseover", (event, d) => {
-      tooltip.transition().duration(150).style("opacity", 1);
-      tooltip.html(
-        `<strong>Year:</strong> ${d.YEAR}<br>
-         <strong>Method:</strong> ${d.DETECTION_METHOD}<br>
-         <strong>Fines:</strong> ${d.FINES.toLocaleString()}`
-      )
-      .style("left", (event.pageX + 10) + "px")
-      .style("top", (event.pageY - 30) + "px");
-    })
-    .on("mouseout", () => {
-      tooltip.transition().duration(200).style("opacity", 0);
-    });
+    // Tooltip
+    const tooltip = d3.select("#barChartContainer")
+      .append("div")
+      .style("position", "absolute")
+      .style("background", "white")
+      .style("padding", "6px 10px")
+      .style("border", "1px solid #ccc")
+      .style("border-radius", "4px")
+      .style("font-size", "13px")
+      .style("pointer-events", "none")
+      .style("opacity", 0);
 
-  // Legend
-  const legend = svg.append("g")
-    .attr("transform", `translate(${width - 140}, 0)`);
+    // Bars
+    svg.selectAll("rect")
+      .data(grouped)
+      .enter()
+      .append("rect")
+      .attr("x", d => x(d.DETECTION_METHOD))
+      .attr("y", d => y(d.FINES))
+      .attr("width", x.bandwidth())
+      .attr("height", d => height - y(d.FINES))
+      .attr("fill", "#3498db")
+      .on("mouseover", (event, d) => {
+        tooltip.transition().duration(150).style("opacity", 1);
+        tooltip.html(
+          `<strong>Method:</strong> ${d.DETECTION_METHOD}<br>
+           <strong>Fines:</strong> ${d.FINES.toLocaleString()}${selectedYear !== "All" ? `<br><strong>Year:</strong> ${selectedYear}` : ""}`
+        )
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 30) + "px");
+      })
+      .on("mouseout", () => {
+        tooltip.transition().duration(200).style("opacity", 0);
+      });
+  };
 
-  methods.forEach((method, i) => {
-    legend.append("rect")
-      .attr("x", 0)
-      .attr("y", i * 20)
-      .attr("width", 12)
-      .attr("height", 12)
-      .attr("fill", color(method));
-
-    legend.append("text")
-      .attr("x", 20)
-      .attr("y", i * 20 + 10)
-      .text(method)
-      .style("font-size", "12px")
-      .attr("alignment-baseline", "middle");
-  });
+  updateBarChart("All", "All");
 });

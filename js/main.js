@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
     updateSummaryCards(year, jurisdiction, method);
     updateDonut(year, jurisdiction);
     updateLineChart(year, jurisdiction, method);
+    updateBarChart(year, method);
   }
 
   function resetFilters() {
