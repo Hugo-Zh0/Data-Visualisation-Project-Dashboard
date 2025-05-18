@@ -284,6 +284,21 @@ footer {
   color: #000;
 }
 
+#viewDataButton {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  background-color: #27ae60;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-top: 1rem;
+}
+
+#viewDataButton:hover {
+  background-color: #1e8449;
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
   .dashboard-grid {

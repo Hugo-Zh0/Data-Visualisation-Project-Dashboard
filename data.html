@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>View & Download Data</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    .file-section {
+      max-width: 700px;
+      margin: 2rem auto;
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.05);
+    }
+    .file-item {
+      margin-bottom: 1.5rem;
+    }
+    .file-item h3 {
+      margin-bottom: 0.4rem;
+      color: #007acc;
+    }
+    .file-item p {
+      margin-bottom: 0.5rem;
+      color: #444;
+    }
+    .file-item a {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: #007acc;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+    .file-item a:hover {
+      background: #005f99;
+    }
+  </style>
+</head>
+<body>
+  <h1>Download Datasets & Resources</h1>
+
+  <div class="file-section">
+    <div class="file-item">
+      <h3>Full Cleaned Data CSV</h3>
+      <p>This dataset contains all mobile phone usage fines & other police data, cleaned and filtered for mobile_phone_use only.</p>
+      <a href="data/cleaned_data_police_enforcement.csv" download target="_blank">Download CSV</a>
+    </div>
+
+    <div class="file-item">
+      <h3>Road Safety Enforcement Data Dictionary</h3>
+      <p>This PDF describes each column and definition used in the enforcement dataset.</p>
+      <a href="data/road-safety-enforcement-data-dictionary.pdf" download target="_blank">Download PDF</a>
+    </div>
+
+    <div class="file-item">
+      <h3>Line Chart CSV</h3>
+      <p>Total mobile phone usage fines by year (2008–2023).</p>
+      <a href="data/mobile_fines_by_year.csv" download target="_blank">Download CSV</a>
+    </div>
+
+    <div class="file-item">
+      <h3>Bar Chart CSV</h3>
+      <p>Fines by detection method and year.</p>
+      <a href="data/mobile_fines_by_detection_method_jurisdiction_year.csv" download target="_blank">Download CSV</a>
+    </div>
+
+    <div class="file-item">
+      <h3>Donut Chart CSV</h3>
+      <p>Detection method breakdown by jurisdiction and year.</p>
+      <a href="data/mobile_fines_by_detection_method_jurisdiction_year.csv" download target="_blank">Download CSV</a>
+    </div>
+
+    <div class="file-item">
+      <h3>Summary Cards CSV</h3>
+      <p>Summarised KPIs used for the dashboard metrics.</p>
+      <a href="data/mobile_fines_summary.csv" download target="_blank">Download CSV</a>
+    </div>
+  </div>
+</body>
+</html>
