@@ -10,25 +10,20 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
 
   fullData = data;
 
-  // Populate Year Filter
+  // Populate filters
   const yearDropdown = d3.select("#yearFilter");
   if (yearDropdown.selectAll("option").size() <= 1) {
     const years = Array.from(new Set(fullData.map(d => d.YEAR))).sort();
     years.forEach(y => {
-      yearDropdown.append("option")
-        .attr("value", y)
-        .text(y);
+      yearDropdown.append("option").attr("value", y).text(y);
     });
   }
 
-  // Populate Jurisdiction Filter
   const jurisdictionDropdown = d3.select("#jurisdictionFilter");
   if (jurisdictionDropdown.selectAll("option").size() <= 1) {
     const jurisdictions = Array.from(new Set(fullData.map(d => d.JURISDICTION))).sort();
     jurisdictions.forEach(j => {
-      jurisdictionDropdown.append("option")
-        .attr("value", j)
-        .text(j);
+      jurisdictionDropdown.append("option").attr("value", j).text(j);
     });
   }
 
@@ -51,11 +46,9 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
     if (selectedYear !== "All") {
       filteredData = filteredData.filter(d => d.YEAR === +selectedYear);
     }
-
     if (selectedJurisdiction !== "All") {
       filteredData = filteredData.filter(d => d.JURISDICTION === selectedJurisdiction);
     }
-
     if (selectedMethod !== "All") {
       filteredData = filteredData.filter(d => d.DETECTION_METHOD === selectedMethod);
     }
@@ -67,25 +60,12 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
     const height = 300;
     const radius = Math.min(width, height) / 2;
 
-    const svg = d3.select("#donutChartContainer")
-      .append("svg")
-      .attr("viewBox", `0 0 ${width} ${height + 40}`)
-      .attr("preserveAspectRatio", "xMidYMid meet")
-      .style("width", "100%")
-      .style("height", "auto")
-      .append("g")
-      .attr("transform", `translate(${width / 2}, ${(height + 40) / 2})`);
-
     let pieData;
     let chartLabel;
     const allDefault = selectedYear === "All" && selectedJurisdiction === "All" && selectedMethod === "All";
 
     if (allDefault) {
-      const grouped = d3.rollups(
-        fullData,
-        v => d3.sum(v, d => d.FINES),
-        d => d.DETECTION_METHOD
-      );
+      const grouped = d3.rollups(filteredData, v => d3.sum(v, d => d.FINES), d => d.DETECTION_METHOD);
       pieData = Object.fromEntries(grouped);
       chartLabel = "Detection Method Breakdown";
     } else if (selectedYear !== "All" && selectedMethod !== "All" && selectedJurisdiction !== "All") {
@@ -93,24 +73,15 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       pieData = { [selectedJurisdiction]: total };
       chartLabel = `${selectedJurisdiction} – Total Fines (${selectedYear})`;
     } else if (selectedYear !== "All" && selectedMethod !== "All") {
-      const grouped = d3.rollups(
-        filteredData,
-        v => d3.sum(v, d => d.FINES),
-        d => d.JURISDICTION
-      );
+      const grouped = d3.rollups(filteredData, v => d3.sum(v, d => d.FINES), d => d.JURISDICTION);
       pieData = Object.fromEntries(grouped);
       chartLabel = `${selectedMethod} Detection Method – Jurisdiction & Fines (${selectedYear})`;
     } else if (selectedYear !== "All") {
-      const grouped = d3.rollups(
-        filteredData,
-        v => d3.sum(v, d => d.FINES),
-        d => d.DETECTION_METHOD
-      );
+      const grouped = d3.rollups(filteredData, v => d3.sum(v, d => d.FINES), d => d.DETECTION_METHOD);
       pieData = Object.fromEntries(grouped);
       chartLabel = `Detection Methods in ${selectedYear}`;
     }
 
-    // No data check
     if (!pieData || Object.keys(pieData).length === 0 || d3.sum(Object.values(pieData)) === 0) {
       d3.select("#donutChartContainer")
         .append("div")
@@ -123,13 +94,22 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       return;
     }
 
-    // Fullscreen button
-    d3.select("#donut-chart h2").html(`${chartLabel} <button class="fullscreen-btn" data-chart="donutChartContainer">⛶</button>`);
+    // Insert buttons
+    d3.select("#donut-chart h2").html(`${chartLabel}
+      <button class="fullscreen-btn" data-chart="donutChartContainer">⛶</button>
+      <button class="export-btn" data-chart="donutChartContainer" data-type="donut">Export ⬇</button>
+    `);
 
-    const color = d3.scaleOrdinal()
-      .domain(Object.keys(pieData))
-      .range(d3.schemeTableau10);
+    const svg = d3.select("#donutChartContainer")
+      .append("svg")
+      .attr("viewBox", `0 0 ${width} ${height + 40}`)
+      .attr("preserveAspectRatio", "xMidYMid meet")
+      .style("width", "100%")
+      .style("height", "auto")
+      .append("g")
+      .attr("transform", `translate(${width / 2}, ${(height + 40) / 2})`);
 
+    const color = d3.scaleOrdinal().domain(Object.keys(pieData)).range(d3.schemeTableau10);
     const pie = d3.pie().value(d => d[1]);
     const arc = d3.arc().innerRadius(radius * 0.5).outerRadius(radius * 0.9);
     const outerArc = d3.arc().innerRadius(radius * 1.05).outerRadius(radius * 1.05);
@@ -146,38 +126,27 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .on("mouseover", function (event, d) {
         const label = d.data[0];
         const total = d.data[1];
+        const breakdown = allDefault
+          ? d3.rollups(fullData.filter(row => row.DETECTION_METHOD === label), v => d3.sum(v, d => d.FINES), d => d.JURISDICTION)
+              .map(([j, f]) => `• ${j}: ${f.toLocaleString()}`).join("<br>")
+          : null;
 
-        if (allDefault) {
-          const breakdown = d3.rollups(
-            fullData.filter(row => row.DETECTION_METHOD === label),
-            v => d3.sum(v, d => d.FINES),
-            d => d.JURISDICTION
-          ).map(([j, f]) => `• ${j}: ${f.toLocaleString()}`).join("<br>");
-
-          tooltip.html(
-            `<strong>Method:</strong> ${label}<br>
-             <strong>Total Fines:</strong> ${total.toLocaleString()}<br><br>
-             <strong>Jurisdictions:</strong><br>${breakdown}`
-          );
-        } else {
-          tooltip.html(
-            `<strong>${label}</strong><br>Fines: ${total.toLocaleString()}`
-          );
-        }
-
+        tooltip.html(
+          allDefault
+            ? `<strong>Method:</strong> ${label}<br><strong>Total Fines:</strong> ${total.toLocaleString()}<br><br><strong>Jurisdictions:</strong><br>${breakdown}`
+            : `<strong>${label}</strong><br>Fines: ${total.toLocaleString()}`
+        );
         tooltip.transition().duration(150).style("opacity", 1)
           .style("left", (event.pageX + 10) + "px")
           .style("top", (event.pageY - 30) + "px");
       })
-      .on("mousemove", (event) => {
-        tooltip.style("left", (event.pageX + 10) + "px")
-               .style("top", (event.pageY - 30) + "px");
+      .on("mousemove", event => {
+        tooltip.style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 30) + "px");
       })
       .on("mouseout", () => {
         tooltip.transition().duration(200).style("opacity", 0);
       });
 
-    // Labels and lines for chart
     arcs.append("text")
       .each(function (d, i) {
         const base = outerArc.centroid(d);
@@ -200,45 +169,47 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
         return [outer, mid, d.labelPos];
       });
 
-    // Add legend
-    const legend = svg.append("g")
-      .attr("transform", `translate(${-(width / 2) + 20},${-(height / 2) + 10})`);
-
+    const legend = svg.append("g").attr("transform", `translate(${-(width / 2) + 20},${-(height / 2) + 10})`);
     Object.keys(pieData).forEach((key, i) => {
-      legend.append("rect")
-        .attr("x", 0)
-        .attr("y", i * 20)
-        .attr("width", 12)
-        .attr("height", 12)
-        .attr("fill", color(key));
+      legend.append("rect").attr("x", 0).attr("y", i * 20).attr("width", 12).attr("height", 12).attr("fill", color(key));
+      legend.append("text").attr("x", 20).attr("y", i * 20 + 10).text(key).style("font-size", "12px").attr("alignment-baseline", "middle");
+    });
 
-      legend.append("text")
-        .attr("x", 20)
-        .attr("y", i * 20 + 10)
-        .text(key)
-        .style("font-size", "12px")
-        .attr("alignment-baseline", "middle");
+    // Rebind the export & fullscreen buttons
+    document.querySelectorAll(".fullscreen-btn").forEach(button => {
+      button.onclick = () => {
+        const chartId = button.getAttribute("data-chart");
+        const chartElement = document.getElementById(chartId);
+        const modal = document.getElementById("chartModal");
+        const modalContent = document.getElementById("chartModalContent");
+        if (chartElement && modal && modalContent) {
+          modalContent.innerHTML = "";
+          const clone = chartElement.cloneNode(true);
+          clone.style.height = "500px";
+          modalContent.appendChild(clone);
+          modal.style.display = "block";
+        }
+      };
+    });
+
+    document.querySelectorAll(".export-btn").forEach(button => {
+      button.onclick = () => {
+        const chartId = button.getAttribute("data-chart");
+        const chartType = button.getAttribute("data-type");
+        const chartElement = document.getElementById(chartId);
+        const svg = chartElement?.querySelector("svg");
+        if (!svg) return alert("Chart not found.");
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const filters = {
+          year: document.getElementById("yearFilter")?.value || "All",
+          method: document.getElementById("methodFilter")?.value || "All",
+          jurisdiction: document.getElementById("jurisdictionFilter")?.value || "All"
+        };
+        localStorage.setItem("exportChartData", JSON.stringify({ chartType, svg: svgData, filters }));
+        window.open("export.html", "_blank");
+      };
     });
   };
-
-setTimeout(() => {
-  document.querySelectorAll(".fullscreen-btn").forEach(button => {
-    button.onclick = () => {
-      const chartId = button.getAttribute("data-chart");
-      const chartElement = document.getElementById(chartId);
-      const modal = document.getElementById("chartModal");
-      const modalContent = document.getElementById("chartModalContent");
-
-      if (chartElement && modal && modalContent) {
-        modalContent.innerHTML = "";
-        const clone = chartElement.cloneNode(true);
-        clone.style.height = "500px";
-        modalContent.appendChild(clone);
-        modal.style.display = "block";
-      }
-    };
-  });
-}, 0); // Ensures it's reattached after DOM change
 
   updateDonut("All", "All", "All");
 });
