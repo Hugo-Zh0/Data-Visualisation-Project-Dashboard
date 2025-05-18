@@ -1,5 +1,4 @@
-// js/main.js
-
+// Function to update filters and charts
 document.addEventListener("DOMContentLoaded", function () {
   const yearSelect = document.getElementById("yearFilter");
   const jurisdictionSelect = document.getElementById("jurisdictionFilter");
@@ -72,4 +71,36 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 });
+
+// Export charts and Data
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".export-btn").forEach(button => {
+    button.addEventListener("click", () => {
+      const chartId = button.getAttribute("data-chart");
+      const chartType = button.getAttribute("data-type");
+      const chartElement = document.getElementById(chartId);
+      const svg = chartElement?.querySelector("svg");
+
+      if (!svg) return alert("Chart not found.");
+
+      const svgData = new XMLSerializer().serializeToString(svg);
+
+      const filters = {
+        year: document.getElementById("yearFilter")?.value || "All",
+        method: document.getElementById("methodFilter")?.value || "All",
+        jurisdiction: document.getElementById("jurisdictionFilter")?.value || "All"
+      };
+
+      // Save export info to localStorage
+      localStorage.setItem("exportChartData", JSON.stringify({
+        chartType,
+        svg: svgData,
+        filters
+      }));
+
+      window.open("export.html", "_blank");
+    });
+  });
+});
+
 

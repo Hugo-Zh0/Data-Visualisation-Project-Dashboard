@@ -123,6 +123,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       return;
     }
 
+    // Fullscreen button
     d3.select("#donut-chart h2").html(`${chartLabel} <button class="fullscreen-btn" data-chart="donutChartContainer">⛶</button>`);
 
     const color = d3.scaleOrdinal()
@@ -176,7 +177,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
         tooltip.transition().duration(200).style("opacity", 0);
       });
 
-    // Labels
+    // Labels and lines for chart
     arcs.append("text")
       .each(function (d, i) {
         const base = outerArc.centroid(d);
@@ -199,7 +200,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
         return [outer, mid, d.labelPos];
       });
 
-    // ✅ Add legend
+    // Add legend
     const legend = svg.append("g")
       .attr("transform", `translate(${-(width / 2) + 20},${-(height / 2) + 10})`);
 

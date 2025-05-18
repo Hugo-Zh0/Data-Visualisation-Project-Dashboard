@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Exported Chart & Data</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+    }
+    #chartContainer {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 2rem;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.6rem;
+    }
+    th {
+      background: #eee;
+    }
+    #downloadExcel {
+      display: block;
+      margin: 0 auto;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      background: #2c3e50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #downloadExcel:hover {
+      background: #1a242f;
+    }
+  </style>
+</head>
+<body>
+  <h1>Exported Graph and Data</h1>
+  <div id="chartContainer"></div>
+  <table id="dataTable">
+    <thead></thead>
+    <tbody></tbody>
+  </table>
+  <button id="downloadExcel">Download as Excel</button>
+
+  <script>
+    const stored = JSON.parse(localStorage.getItem("exportChartData") || "{}");
+    const svgData = stored.svg || "";
+    const chartType = stored.chartType || "Chart";
+    const { year, method, jurisdiction } = stored.filters || {};
+
+    const chartContainer = document.getElementById("chartContainer");
+    chartContainer.innerHTML = svgData;
+
+    const table = document.getElementById("dataTable");
+    const thead = table.querySelector("thead");
+    const tbody = table.querySelector("tbody");
+
+    let filteredRows = [];
+
+    fetch("data/mobile_fines_by_detection_method_jurisdiction_year.csv")
+      .then(res => res.text())
+      .then(csv => {
+        const [headerLine, ...lines] = csv.trim().split("\n");
+        const headers = headerLine.split(",");
+
+        const data = lines.map(row => {
+          const cells = row.split(",");
+          const entry = {};
+          headers.forEach((h, i) => entry[h.trim()] = cells[i]?.trim());
+          return entry;
+        });
+
+        filteredRows = data.filter(d =>
+          (year === "All" || d.YEAR === year) &&
+          (method === "All" || d.DETECTION_METHOD === method) &&
+          (jurisdiction === "All" || d.JURISDICTION === jurisdiction)
+        );
+
+        thead.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>`;
+        tbody.innerHTML = filteredRows.map(row =>
+          `<tr>${headers.map(h => `<td>${row[h]}</td>`).join("")}</tr>`
+        ).join("");
+      });
+
+    // Download Excel
+    document.getElementById("downloadExcel").addEventListener("click", () => {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(filteredRows);
+      XLSX.utils.book_append_sheet(wb, ws, "Chart Data");
+
+      // Convert SVG to PNG and add as second sheet with image
+      const svgElement = document.querySelector("svg");
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svgElement);
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+
+      const blob = new Blob([svgString], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+
+      img.onload = function () {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        const imageData = canvas.toDataURL("image/png");
+
+        const imgSheet = XLSX.utils.aoa_to_sheet([
+          ["Chart Image"],
+          [""]
+        ]);
+        XLSX.utils.book_append_sheet(wb, imgSheet, "Chart");
+
+        XLSX.writeFile(wb, `MobileFines_${year}_${method}_${jurisdiction}.xlsx`);
+      };
+
+      img.src = url;
+
+    // Add both buttons
+    const excelBtn = document.getElementById("downloadExcel");
+    const pngBtn = document.createElement("button");
+
+    pngBtn.textContent = "Download Chart as PNG";
+    pngBtn.style.margin = "1rem auto";
+    pngBtn.style.display = "block";
+    pngBtn.style.padding = "0.75rem 1.5rem";
+    pngBtn.style.backgroundColor = "#007acc";
+    pngBtn.style.color = "#fff";
+    pngBtn.style.border = "none";
+    pngBtn.style.borderRadius = "4px";
+    pngBtn.style.cursor = "pointer";
+    document.body.appendChild(pngBtn);
+
+    pngBtn.addEventListener("click", () => {
+    const svgElement = document.querySelector("svg");
+    const svgString = new XMLSerializer().serializeToString(svgElement);
+    const blob = new Blob([svgString], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+
+    const img = new Image();
+    img.onload = function () {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+
+        const pngUrl = canvas.toDataURL("image/png");
+        const a = document.createElement("a");
+        a.href = pngUrl;
+        a.download = `Chart_${chartType}.png`;
+        a.click();
+    };
+
+    img.src = url;
+    });
+    });
+  </script>
+</body>
+</html>
