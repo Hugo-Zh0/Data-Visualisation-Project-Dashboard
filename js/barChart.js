@@ -28,7 +28,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
     d3.select("#barChartContainer").select("div")?.remove();
     d3.select("#barChartContainer").select(".no-data-warning")?.remove();
 
-    // 🔴 No data check
+    // No data check
     if (!grouped || grouped.length === 0 || d3.sum(grouped.map(d => d.FINES)) === 0) {
       d3.select("#barChartContainer")
         .append("div")

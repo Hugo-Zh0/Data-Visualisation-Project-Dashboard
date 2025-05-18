@@ -1,5 +1,3 @@
-// js/summaryCards.js
-
 function updateSummaryCards(selectedYear = "All", selectedJurisdiction = "All", selectedMethod = "All") {
   d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data => {
     data.forEach(d => {
