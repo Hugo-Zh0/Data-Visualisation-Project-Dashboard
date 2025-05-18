@@ -101,7 +101,7 @@
       const svgElement = document.querySelector("svg");
       if (!svgElement) return alert("No chart to export.");
 
-      // ✅ Fix viewBox and scale
+      // Fix viewBox and scale
       const viewBox = svgElement.getAttribute("viewBox");
       if (!viewBox) return alert("SVG is missing viewBox");
       const [minX, minY, vbWidth, vbHeight] = viewBox.split(" ").map(Number);
@@ -121,13 +121,13 @@
         canvas.height = height;
         const ctx = canvas.getContext("2d");
 
-        // ✅ White background
+        // White background
         ctx.fillStyle = "#fff";
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
         URL.revokeObjectURL(url);
 
-        // ✅ Canvas to PNG
+        // Canvas to PNG
         canvas.toBlob(pngBlob => {
           const zip = new JSZip();
 
