@@ -1,4 +1,3 @@
-// Function to update filters and charts
 document.addEventListener("DOMContentLoaded", function () {
   const yearSelect = document.getElementById("yearFilter");
   const jurisdictionSelect = document.getElementById("jurisdictionFilter");
@@ -16,10 +15,11 @@ document.addEventListener("DOMContentLoaded", function () {
   function applyFilters() {
     const { year, jurisdiction, method } = getSelectedValues();
 
-    updateSummaryCards(year, jurisdiction, method);
-    updateLineChart(year, jurisdiction, method);
-    updateBarChart(year, method);
-    updateDonut(year, jurisdiction, method);
+    // These must exist first before calling
+    if (typeof updateLineChart === "function") updateLineChart(year, jurisdiction, method);
+    if (typeof updateBarChart === "function") updateBarChart(year, method);
+    if (typeof updateDonut === "function") updateDonut(year, jurisdiction, method);
+    if (typeof updateSummaryCards === "function") updateSummaryCards(year, jurisdiction, method);
   }
 
   function resetFilters() {
@@ -34,9 +34,9 @@ document.addEventListener("DOMContentLoaded", function () {
   methodSelect?.addEventListener("change", applyFilters);
   resetButton?.addEventListener("click", resetFilters);
 
-  // Initial load
-  applyFilters();
+  setTimeout(applyFilters, 50);
 });
+
 
 // Fullscreen modal for charts
 document.addEventListener("DOMContentLoaded", () => {

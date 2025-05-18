@@ -5,8 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mobile Phone Usage Fines Dashboard</title>
   <link rel="stylesheet" href="css/dashboard.css" />
+
+  <!-- Load core dependencies -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="js/main.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -45,36 +48,48 @@
 
 <!-- Dashboard Grid -->
 <div class="dashboard-grid">
-  <div id="summary-cards"></div>
 
+  <!-- Summary Column + Export All -->
+  <div id="summary-column">
+    <div id="summary-cards"></div>
+    <div id="export-all-wrapper">
+      <button id="exportAllButton">📤 Export All</button>
+    </div>
+  </div>
+
+  <!-- Line Chart -->
   <div id="line-chart">
-  <h2>
-    Fines Over Time (2008–2023)
-    <button class="fullscreen-btn" data-chart="lineChartContainer">⛶</button>
-    <button class="export-btn" data-chart="lineChartContainer" data-type="line">Export ⬇</button>
-  </h2>
-  <div id="lineChartContainer"></div>
-</div>
-
-<div id="bottom-row">
-  <div id="donut-chart">
-  <h2>
-    Detection Method Breakdown
-    <button class="fullscreen-btn" data-chart="donutChartContainer">⛶</button>
-    <button class="export-btn" data-chart="donutChartContainer" data-type="donut">Export ⬇</button>
-  </h2>
-  <div id="donutChartContainer"></div>
-  </div>
-  <div id="bar-chart">
     <h2>
-      Detection Method Used Over Time
-      <button class="fullscreen-btn" data-chart="barChartContainer">⛶</button>
-      <button class="export-btn" data-chart="barChartContainer" data-type="bar">Export ⬇</button>
+      Fines Over Time (2008–2023)
+      <button class="fullscreen-btn" data-chart="lineChartContainer">⛶</button>
+      <button class="export-btn" data-chart="lineChartContainer" data-type="line">Export ⬇</button>
     </h2>
-    <div id="barChartContainer"></div>
+    <div id="lineChartContainer"></div>
+  </div>
+
+  <!-- Donut + Bar Charts -->
+  <div id="bottom-row">
+    <div id="donut-chart">
+      <h2>
+        Detection Method Breakdown
+        <button class="fullscreen-btn" data-chart="donutChartContainer">⛶</button>
+        <button class="export-btn" data-chart="donutChartContainer" data-type="donut">Export ⬇</button>
+      </h2>
+      <div id="donutChartContainer"></div>
+    </div>
+
+    <div id="bar-chart">
+      <h2>
+        Detection Method Used Over Time
+        <button class="fullscreen-btn" data-chart="barChartContainer">⛶</button>
+        <button class="export-btn" data-chart="barChartContainer" data-type="bar">Export ⬇</button>
+      </h2>
+      <div id="barChartContainer"></div>
+    </div>
   </div>
 </div>
 
+<!-- Footer -->
 <footer>
   <p>&copy; 2025 Hugo & Harron Group Task – Mobile Phone Usage Fines Dashboard</p>
 </footer>
@@ -83,12 +98,16 @@
 <script src="js/lineChart.js"></script>
 <script src="js/barChart.js"></script>
 <script src="js/donutChart.js"></script>
+<script src="js/exportAll.js"></script>
+<script src="js/main.js"></script>
 
+<!-- Fullscreen Modal Container -->
 <div id="chartModal" class="chart-modal">
   <div class="chart-modal-content">
     <span class="chart-modal-close">&times;</span>
     <div id="chartModalContent"></div>
   </div>
 </div>
+
 </body>
 </html>

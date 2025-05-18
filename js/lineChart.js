@@ -1,12 +1,10 @@
-let updateLineChart;
-
 d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data => {
   data.forEach(d => {
     d.YEAR = +d.YEAR;
     d.FINES = +d.FINES;
   });
 
-  updateLineChart = function (selectedYear = "All", selectedJurisdiction = "All", selectedMethod = "All") {
+  window.updateLineChart = function (selectedYear = "All", selectedJurisdiction = "All", selectedMethod = "All") {
     let filtered = data;
 
     if (selectedYear !== "All") {
@@ -53,7 +51,6 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
     d3.select("#lineChartContainer").select("div")?.remove();
     d3.select("#lineChartContainer").select(".no-data-warning")?.remove();
 
-    // If no data found, show message
     if (!totals || totals.length === 0 || d3.sum(totals.map(d => d.FINES)) === 0) {
       d3.select("#lineChartContainer")
         .append("div")
@@ -100,8 +97,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .attr("transform", `translate(0,${height})`)
       .call(d3.axisBottom(x).tickFormat(d3.format("d")));
 
-    svg.append("g")
-      .call(d3.axisLeft(y));
+    svg.append("g").call(d3.axisLeft(y));
 
     // Axis Labels
     svg.append("text")
@@ -160,7 +156,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
         tooltip.transition().duration(200).style("opacity", 0);
       });
 
-    // 🟢 Legend
+    // Legend
     svg.append("rect")
       .attr("x", width - 130)
       .attr("y", -10)
@@ -176,5 +172,5 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .attr("alignment-baseline", "middle");
   };
 
-  updateLineChart("All", "All", "All");
+  window.updateLineChart("All", "All", "All");
 });
