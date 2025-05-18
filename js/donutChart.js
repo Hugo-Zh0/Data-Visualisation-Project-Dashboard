@@ -10,7 +10,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
 
   fullData = data;
 
-  // ✅ Populate Year Filter
+  // Populate Year Filter
   const yearDropdown = d3.select("#yearFilter");
   if (yearDropdown.selectAll("option").size() <= 1) {
     const years = Array.from(new Set(fullData.map(d => d.YEAR))).sort();
@@ -21,7 +21,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
     });
   }
 
-  // ✅ Populate Jurisdiction Filter
+  // Populate Jurisdiction Filter
   const jurisdictionDropdown = d3.select("#jurisdictionFilter");
   if (jurisdictionDropdown.selectAll("option").size() <= 1) {
     const jurisdictions = Array.from(new Set(fullData.map(d => d.JURISDICTION))).sort();
@@ -110,7 +110,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       chartLabel = `Detection Methods in ${selectedYear}`;
     }
 
-    // 🔴 No data check
+    // No data check
     if (!pieData || Object.keys(pieData).length === 0 || d3.sum(Object.values(pieData)) === 0) {
       d3.select("#donutChartContainer")
         .append("div")
@@ -123,7 +123,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       return;
     }
 
-    d3.select("#donut-chart h2").text(chartLabel);
+    d3.select("#donut-chart h2").html(`${chartLabel} <button class="fullscreen-btn" data-chart="donutChartContainer">⛶</button>`);
 
     const color = d3.scaleOrdinal()
       .domain(Object.keys(pieData))
@@ -219,6 +219,25 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
         .attr("alignment-baseline", "middle");
     });
   };
+
+setTimeout(() => {
+  document.querySelectorAll(".fullscreen-btn").forEach(button => {
+    button.onclick = () => {
+      const chartId = button.getAttribute("data-chart");
+      const chartElement = document.getElementById(chartId);
+      const modal = document.getElementById("chartModal");
+      const modalContent = document.getElementById("chartModalContent");
+
+      if (chartElement && modal && modalContent) {
+        modalContent.innerHTML = "";
+        const clone = chartElement.cloneNode(true);
+        clone.style.height = "500px";
+        modalContent.appendChild(clone);
+        modal.style.display = "block";
+      }
+    };
+  });
+}, 0); // Ensures it's reattached after DOM change
 
   updateDonut("All", "All", "All");
 });

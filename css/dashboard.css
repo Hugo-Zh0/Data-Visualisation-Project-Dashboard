@@ -163,7 +163,7 @@ body {
 }
 
 #donut-chart {
-  background-color: #343a40;
+  background-color: #5d9cdb;
   color: white;
 }
 
@@ -199,6 +199,49 @@ footer {
   background-color: #eee;
   font-size: 0.8rem;
   color: #555;
+}
+
+.fullscreen-btn {
+  float: right;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #555;
+}
+.fullscreen-btn:hover {
+  color: #000;
+}
+
+.chart-modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.7);
+}
+
+.chart-modal-content {
+  background: white;
+  margin: 5% auto;
+  padding: 1rem;
+  width: 90%;
+  max-width: 1000px;
+  border-radius: 6px;
+  position: relative;
+}
+
+.chart-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
 }
 
 /* Responsive */
