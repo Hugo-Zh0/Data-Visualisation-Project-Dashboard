@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Exported Chart & Data</title>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -29,7 +31,7 @@
     th {
       background: #eee;
     }
-    #downloadExcel {
+    #downloadZip {
       display: block;
       margin: 0 auto;
       padding: 0.75rem 1.5rem;
@@ -40,7 +42,7 @@
       border-radius: 4px;
       cursor: pointer;
     }
-    #downloadExcel:hover {
+    #downloadZip:hover {
       background: #1a242f;
     }
   </style>
@@ -52,13 +54,13 @@
     <thead></thead>
     <tbody></tbody>
   </table>
-  <button id="downloadExcel">Download as Excel</button>
+  <button id="downloadZip">Download as ZIP (Excel + Chart)</button>
 
   <script>
     const stored = JSON.parse(localStorage.getItem("exportChartData") || "{}");
     const svgData = stored.svg || "";
     const chartType = stored.chartType || "Chart";
-    const { year, method, jurisdiction } = stored.filters || {};
+    const { year = "All", method = "All", jurisdiction = "All" } = stored.filters || {};
 
     const chartContainer = document.getElementById("chartContainer");
     chartContainer.innerHTML = svgData;
@@ -68,12 +70,13 @@
     const tbody = table.querySelector("tbody");
 
     let filteredRows = [];
+    let headers = [];
 
     fetch("data/mobile_fines_by_detection_method_jurisdiction_year.csv")
       .then(res => res.text())
       .then(csv => {
         const [headerLine, ...lines] = csv.trim().split("\n");
-        const headers = headerLine.split(",");
+        headers = headerLine.split(",");
 
         const data = lines.map(row => {
           const cells = row.split(",");
@@ -94,80 +97,58 @@
         ).join("");
       });
 
-    // Download Excel
-    document.getElementById("downloadExcel").addEventListener("click", () => {
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(filteredRows);
-      XLSX.utils.book_append_sheet(wb, ws, "Chart Data");
-
-      // Convert SVG to PNG and add as second sheet with image
+    document.getElementById("downloadZip").addEventListener("click", () => {
       const svgElement = document.querySelector("svg");
-      const serializer = new XMLSerializer();
-      const svgString = serializer.serializeToString(svgElement);
+      if (!svgElement) return alert("No chart to export.");
 
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
+      // ✅ Fix viewBox and scale
+      const viewBox = svgElement.getAttribute("viewBox");
+      if (!viewBox) return alert("SVG is missing viewBox");
+      const [minX, minY, vbWidth, vbHeight] = viewBox.split(" ").map(Number);
+
+      const scale = 3; // Upscale for sharp image
+      const width = vbWidth * scale;
+      const height = vbHeight * scale;
+
+      const svgString = new XMLSerializer().serializeToString(svgElement);
+      const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
+
       const img = new Image();
-
-      const blob = new Blob([svgString], { type: "image/svg+xml" });
-      const url = URL.createObjectURL(blob);
-
       img.onload = function () {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        const imageData = canvas.toDataURL("image/png");
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
 
-        const imgSheet = XLSX.utils.aoa_to_sheet([
-          ["Chart Image"],
-          [""]
-        ]);
-        XLSX.utils.book_append_sheet(wb, imgSheet, "Chart");
+        // ✅ White background
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
 
-        XLSX.writeFile(wb, `MobileFines_${year}_${method}_${jurisdiction}.xlsx`);
+        // ✅ Canvas to PNG
+        canvas.toBlob(pngBlob => {
+          const zip = new JSZip();
+
+          // Add Excel file
+          const wb = XLSX.utils.book_new();
+          const ws = XLSX.utils.json_to_sheet(filteredRows);
+          XLSX.utils.book_append_sheet(wb, ws, "Chart Data");
+          const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+          const excelBlob = new Blob([wbout], { type: "application/octet-stream" });
+
+          zip.file(`MobileFines_Data.xlsx`, excelBlob);
+          zip.file(`MobileFines_Chart.png`, pngBlob);
+
+          zip.generateAsync({ type: "blob" }).then(content => {
+            const name = `MobileFines_${year}_${method}_${jurisdiction}.zip`;
+            saveAs(content, name);
+          });
+        }, "image/png");
       };
 
       img.src = url;
-
-    // Add both buttons
-    const excelBtn = document.getElementById("downloadExcel");
-    const pngBtn = document.createElement("button");
-
-    pngBtn.textContent = "Download Chart as PNG";
-    pngBtn.style.margin = "1rem auto";
-    pngBtn.style.display = "block";
-    pngBtn.style.padding = "0.75rem 1.5rem";
-    pngBtn.style.backgroundColor = "#007acc";
-    pngBtn.style.color = "#fff";
-    pngBtn.style.border = "none";
-    pngBtn.style.borderRadius = "4px";
-    pngBtn.style.cursor = "pointer";
-    document.body.appendChild(pngBtn);
-
-    pngBtn.addEventListener("click", () => {
-    const svgElement = document.querySelector("svg");
-    const svgString = new XMLSerializer().serializeToString(svgElement);
-    const blob = new Blob([svgString], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
-
-    const img = new Image();
-    img.onload = function () {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0);
-        URL.revokeObjectURL(url);
-
-        const pngUrl = canvas.toDataURL("image/png");
-        const a = document.createElement("a");
-        a.href = pngUrl;
-        a.download = `Chart_${chartType}.png`;
-        a.click();
-    };
-
-    img.src = url;
-    });
     });
   </script>
 </body>
