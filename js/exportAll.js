@@ -1,79 +1,88 @@
-// Export All: Downloads all charts + their data into one ZIP with folders
-document.getElementById("exportAllButton")?.addEventListener("click", () => {
-  const JSZip = window.JSZip;
-  const XLSX = window.XLSX;
-  const zip = new JSZip();
+document.addEventListener("DOMContentLoaded", () => {
+  function tryBindExportAll() {
+    const exportBtn = document.getElementById("exportAllButton");
+    if (!exportBtn) return setTimeout(tryBindExportAll, 100);
 
-  const chartMappings = [
-    { id: "lineChartContainer", name: "LineChart", type: "line" },
-    { id: "barChartContainer", name: "BarChart", type: "bar" },
-    { id: "donutChartContainer", name: "DonutChart", type: "donut" }
-  ];
+    exportBtn.addEventListener("click", async () => {
+      const zip = new JSZip();
 
-  const filters = {
-    year: document.getElementById("yearFilter")?.value || "All",
-    method: document.getElementById("methodFilter")?.value || "All",
-    jurisdiction: document.getElementById("jurisdictionFilter")?.value || "All"
-  };
-
-  Promise.all(chartMappings.map(({ id, name, type }) => {
-    const container = document.getElementById(id);
-    if (!container) return Promise.resolve(null);
-
-    const svg = container.querySelector("svg");
-    if (!svg) return Promise.resolve(null);
-
-    const svgData = new XMLSerializer().serializeToString(svg);
-
-    // Create PNG from SVG
-    const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-    const svgUrl = URL.createObjectURL(svgBlob);
-    const img = new Image();
-
-    return new Promise((resolve) => {
-      img.onload = function () {
-        const viewBox = svg.getAttribute("viewBox")?.split(" ").map(Number) || [0, 0, 800, 300];
-        const [minX, minY, vbWidth, vbHeight] = viewBox;
-        const scale = 3;
-
-        const canvas = document.createElement("canvas");
-        canvas.width = vbWidth * scale;
-        canvas.height = vbHeight * scale;
-        const ctx = canvas.getContext("2d");
-
-        ctx.fillStyle = "#fff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        URL.revokeObjectURL(svgUrl);
-
-        canvas.toBlob(pngBlob => {
-          // Create dummy Excel data (real data binding can be added later)
-          const wb = XLSX.utils.book_new();
-          const ws = XLSX.utils.aoa_to_sheet([
-            ["Placeholder Data for", name],
-            ["Year", filters.year],
-            ["Method", filters.method],
-            ["Jurisdiction", filters.jurisdiction]
-          ]);
-          XLSX.utils.book_append_sheet(wb, ws, "Chart Data");
-
-          const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-          const excelBlob = new Blob([wbout], { type: "application/octet-stream" });
-
-          const folder = zip.folder(name);
-          folder.file(`MobileFines_${name}.png`, pngBlob);
-          folder.file(`MobileFines_${name}.xlsx`, excelBlob);
-
-          resolve();
-        }, "image/png");
+      const filters = {
+        year: document.getElementById("yearFilter")?.value || "All",
+        method: document.getElementById("methodFilter")?.value || "All",
+        jurisdiction: document.getElementById("jurisdictionFilter")?.value || "All"
       };
 
-      img.src = svgUrl;
+      // Define charts to export
+      const charts = [
+        { id: "lineChartContainer", label: "LineChart", folder: "Line Chart" },
+        { id: "barChartContainer", label: "BarChart", folder: "Bar Chart" },
+        { id: "donutChartContainer", label: "DonutChart", folder: "Donut Chart" }
+      ];
+
+      // Fetch data once
+      const csvText = await fetch("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(res => res.text());
+      const [headerLine, ...lines] = csvText.trim().split("\n");
+      const headers = headerLine.split(",");
+
+      const data = lines.map(row => {
+        const cells = row.split(",");
+        const entry = {};
+        headers.forEach((h, i) => entry[h.trim()] = cells[i]?.trim());
+        return entry;
+      });
+
+      const filtered = data.filter(d =>
+        (filters.year === "All" || d.YEAR === filters.year) &&
+        (filters.method === "All" || d.DETECTION_METHOD === filters.method) &&
+        (filters.jurisdiction === "All" || d.JURISDICTION === filters.jurisdiction)
+      );
+
+      // Create individual folders per chart
+      for (const { id, label, folder } of charts) {
+        const svgElement = document.getElementById(id)?.querySelector("svg");
+        if (!svgElement) continue;
+
+        // Convert SVG to PNG
+        const svgString = new XMLSerializer().serializeToString(svgElement);
+        const blob = new Blob([svgString], { type: "image/svg+xml" });
+        const url = URL.createObjectURL(blob);
+
+        await new Promise(resolve => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width * 2;
+            canvas.height = img.height * 2;
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(pngBlob => {
+              zip.folder(folder).file(`${label}.png`, pngBlob);
+              resolve();
+            }, "image/png");
+
+            URL.revokeObjectURL(url);
+          };
+          img.src = url;
+        });
+
+        // Save chart-specific filtered data
+        const chartData = filtered; // same data, but you could refine per chart type
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(chartData);
+        XLSX.utils.book_append_sheet(wb, ws, "Data");
+        const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+
+        zip.folder(folder).file(`${label}_Data.xlsx`, wbout);
+      }
+
+      // Download zip
+      const zipName = `Mobile_Fines_Export_All_Current.zip`;
+      zip.generateAsync({ type: "blob" }).then(content => saveAs(content, zipName));
     });
-  })).then(() => {
-    zip.generateAsync({ type: "blob" }).then(zipFile => {
-      const zipName = `MobileFines_ExportAll_${Date.now()}.zip`;
-      saveAs(zipFile, zipName);
-    });
-  });
+  }
+
+  tryBindExportAll();
 });
