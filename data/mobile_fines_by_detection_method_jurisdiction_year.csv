@@ -96,7 +96,7 @@ YEAR,JURISDICTION,DETECTION_METHOD,FINES
 2019,VIC,Police issued,36694
 2019,WA,Police issued,11850
 2020,ACT,Police issued,812
-2020,NSW,Fixed or mobile camera,138847
+2020,NSW,Mobile camera,138847
 2020,NSW,Police issued,12878
 2020,NT,Police issued,380
 2020,QLD,Police issued,4823
@@ -105,33 +105,33 @@ YEAR,JURISDICTION,DETECTION_METHOD,FINES
 2020,VIC,Police issued,21231
 2020,WA,Police issued,7889
 2021,ACT,Police issued,544
-2021,NSW,Fixed or mobile camera,163722
+2021,NSW,Mobile camera,163722
 2021,NSW,Police issued,10360
 2021,NT,Police issued,309
-2021,QLD,Fixed or mobile camera,14574
+2021,QLD,Mobile camera,14574
 2021,QLD,Police issued,3973
 2021,SA,Police issued,4799
 2021,TAS,Police issued,2328
 2021,VIC,Police issued,15562
 2021,WA,Police issued,4909
 2022,ACT,Police issued,374
-2022,NSW,Fixed or mobile camera,194793
+2022,NSW,Mobile camera,194793
 2022,NSW,Police issued,12904
 2022,NT,Police issued,302
-2022,QLD,Fixed or mobile camera,118152
+2022,QLD,Mobile camera,118152
 2022,QLD,Police issued,3487
 2022,SA,Police issued,4583
 2022,TAS,Police issued,1973
 2022,VIC,Police issued,19428
 2022,WA,Police issued,6346
 2023,ACT,Police issued,288
-2023,NSW,Fixed or mobile camera,202757
+2023,NSW,Mobile camera,202757
 2023,NSW,Police issued,13285
 2023,NT,Police issued,205
-2023,QLD,Fixed or mobile camera,77213
+2023,QLD,Mobile camera,77213
 2023,QLD,Police issued,3079
 2023,SA,Police issued,5769
-2023,TAS,Fixed or mobile camera,870
+2023,TAS,Mobile camera,870
 2023,TAS,Police issued,1558
 2023,VIC,Mobile camera,30723
 2023,VIC,Police issued,18823
