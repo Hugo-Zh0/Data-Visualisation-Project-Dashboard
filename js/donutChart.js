@@ -1,4 +1,22 @@
-// DONUT CHART FIXED TO HANDLE INTERACTIVE FLOW AND SHOW MULTIPLE JURISDICTIONS
+// Use existing methodColors if already defined
+const donutMethodColors = typeof methodColors !== 'undefined' ? methodColors : {
+  "Police issued": "#e74c3c",
+  "Mobile camera": "#27ae60",
+  "All": "#007acc",
+  "Other": "#999"
+};
+
+const jurisdictionColors = {
+  "NSW": "#007acc",
+  "VIC": "#e74c3c",
+  "QLD": "#27ae60",
+  "WA": "#f39c12",
+  "SA": "#8e44ad",
+  "TAS": "#16a085",
+  "ACT": "#d35400",
+  "NT": "#2c3e50"
+};
+
 let updateDonut;
 let fullData;
 let filteredData;
@@ -70,7 +88,16 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .append("g")
       .attr("transform", `translate(${width / 2}, ${(height + 40) / 2})`);
 
-    const color = d3.scaleOrdinal().domain(Object.keys(pieData)).range(d3.schemeSet2);
+    const uniqueKeys = Object.keys(pieData);
+    const isJurisdiction = selectedYear !== "All" && selectedMethod !== "All";
+
+    const color = d3.scaleOrdinal()
+      .domain(uniqueKeys)
+      .range(uniqueKeys.map(key => {
+        if (isJurisdiction) return jurisdictionColors[key] || "#999";
+        return donutMethodColors[key] || donutMethodColors["Other"];
+      }));
+
     const pie = d3.pie().value(d => d[1]);
     const arc = d3.arc().innerRadius(radius * 0.5).outerRadius(radius * 0.9);
     const outerArc = d3.arc().innerRadius(radius * 1.05).outerRadius(radius * 1.05);
