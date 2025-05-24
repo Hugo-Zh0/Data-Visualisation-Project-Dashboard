@@ -3,14 +3,29 @@ let updateBarChart;
 const methodColors = {
   "Police issued": "#e74c3c",
   "Mobile camera": "#27ae60",
+  "All": "#007acc",
   "Other": "#999"
-};
+};;
 
 d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data => {
   data.forEach(d => {
     d.YEAR = +d.YEAR;
     d.FINES = +d.FINES;
   });
+
+  function applyFilterSelections() {
+    const year = document.getElementById("yearFilter")?.value || "All";
+    const jurisdiction = document.getElementById("jurisdictionFilter")?.value || "All";
+    const method = document.getElementById("methodFilter")?.value || "All";
+    if (typeof updateLineChart === "function") updateLineChart(year, jurisdiction, method);
+    if (typeof updateBarChart === "function") updateBarChart(year, method);
+    if (typeof updateDonut === "function") updateDonut(year, jurisdiction, method);
+    if (typeof updateSummaryCards === "function") updateSummaryCards(year, jurisdiction, method);
+  }
+
+  document.getElementById("yearFilter")?.addEventListener("change", applyFilterSelections);
+  document.getElementById("jurisdictionFilter")?.addEventListener("change", applyFilterSelections);
+  document.getElementById("methodFilter")?.addEventListener("change", applyFilterSelections);
 
   updateBarChart = function (selectedYear = "All", selectedMethod = "All") {
     let filtered = data;
@@ -112,7 +127,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .attr("y", d => y(d.FINES))
       .attr("width", x.bandwidth())
       .attr("height", d => height - y(d.FINES))
-      .attr("fill", d => methodColors[d.DETECTION_METHOD] || "#999")
+      .attr("fill", d => methodColors[d.DETECTION_METHOD] || methodColors["All"] || "#007acc")
       .style("cursor", "pointer")
       .on("click", (event, d) => {
         const { year = "All" } = window.selectedState || {};
