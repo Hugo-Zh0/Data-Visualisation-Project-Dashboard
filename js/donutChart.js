@@ -122,20 +122,38 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .style("z-index", 1000);
 
     arcs.append("path")
-      .attr("d", arc)
-      .attr("fill", d => color(d.data[0]))
-      .on("mouseover", function (event, d) {
-        tooltip.html(`<strong>${d.data[0]}</strong><br>Fines: ${d.data[1].toLocaleString()}`)
-          .style("left", (event.pageX + 10) + "px")
-          .style("top", (event.pageY - 30) + "px")
-          .transition().duration(150).style("opacity", 1);
-      })
-      .on("mousemove", function (event) {
-        tooltip.style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 30) + "px");
-      })
-      .on("mouseout", () => {
-        tooltip.transition().duration(200).style("opacity", 0);
-      });
+    .attr("d", arc)
+    .attr("fill", d => color(d.data[0]))
+    .style("cursor", "pointer")
+    .on("mouseover", function (event, d) {
+      tooltip.html(`<strong>${d.data[0]}</strong><br>Fines: ${d.data[1].toLocaleString()}`)
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 30) + "px")
+        .transition().duration(150).style("opacity", 1);
+    })
+    .on("mousemove", function (event) {
+      tooltip.style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 30) + "px");
+    })
+    .on("mouseout", () => {
+      tooltip.transition().duration(200).style("opacity", 0);
+    })
+    .on("click", function (event, d) {
+    const method = d.data[0];
+    const year = window.selectedState?.year || "All";
+    const currentMethod = window.selectedState?.method || "All";
+
+    // Only allow drill-down from method to jurisdiction (not from jurisdiction again)
+    const isCurrentlyJurisdiction = (year !== "All" && currentMethod !== "All");
+
+    if (method && method !== "All" && !isCurrentlyJurisdiction) {
+      const fallbackYear = year === "All"
+        ? Math.max(...fullData.map(d => d.YEAR))
+        : year;
+
+      tooltip.transition().duration(100).style("opacity", 0); // hide tooltip
+      updateDonut(fallbackYear, "All", method);
+      }
+    });
 
     arcs.append("text")
       .each(function (d, i) {
