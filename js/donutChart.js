@@ -1,3 +1,4 @@
+// DONUT CHART FIXED TO HANDLE INTERACTIVE FLOW AND SHOW MULTIPLE JURISDICTIONS
 let updateDonut;
 let fullData;
 let filteredData;
@@ -10,48 +11,14 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
 
   fullData = data;
 
-  // Populate filters
-  const yearDropdown = d3.select("#yearFilter");
-  if (yearDropdown.selectAll("option").size() <= 1) {
-    const years = Array.from(new Set(fullData.map(d => d.YEAR))).sort();
-    years.forEach(y => {
-      yearDropdown.append("option").attr("value", y).text(y);
-    });
-  }
-
-  const jurisdictionDropdown = d3.select("#jurisdictionFilter");
-  if (jurisdictionDropdown.selectAll("option").size() <= 1) {
-    const jurisdictions = Array.from(new Set(fullData.map(d => d.JURISDICTION))).sort();
-    jurisdictions.forEach(j => {
-      jurisdictionDropdown.append("option").attr("value", j).text(j);
-    });
-  }
-
-  const tooltip = d3.select("body")
-    .append("div")
-    .attr("class", "donut-tooltip")
-    .style("position", "absolute")
-    .style("background", "white")
-    .style("padding", "10px")
-    .style("border", "1px solid #ccc")
-    .style("border-radius", "4px")
-    .style("font-size", "13px")
-    .style("pointer-events", "none")
-    .style("opacity", 0)
-    .style("z-index", 1000);
-
   updateDonut = function (selectedYear = "All", selectedJurisdiction = "All", selectedMethod = "All") {
+    window.selectedState = { year: selectedYear, jurisdiction: selectedJurisdiction, method: selectedMethod };
+
     filteredData = fullData;
 
-    if (selectedYear !== "All") {
-      filteredData = filteredData.filter(d => d.YEAR === +selectedYear);
-    }
-    if (selectedJurisdiction !== "All") {
-      filteredData = filteredData.filter(d => d.JURISDICTION === selectedJurisdiction);
-    }
-    if (selectedMethod !== "All") {
-      filteredData = filteredData.filter(d => d.DETECTION_METHOD === selectedMethod);
-    }
+    if (selectedYear !== "All") filteredData = filteredData.filter(d => d.YEAR === +selectedYear);
+    if (selectedJurisdiction !== "All") filteredData = filteredData.filter(d => d.JURISDICTION === selectedJurisdiction);
+    if (selectedMethod !== "All") filteredData = filteredData.filter(d => d.DETECTION_METHOD === selectedMethod);
 
     d3.select("#donutChartContainer").select("svg")?.remove();
     d3.select("#donutChartContainer").select(".no-data-warning")?.remove();
@@ -61,25 +28,20 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
     const radius = Math.min(width, height) / 2;
 
     let pieData;
-    let chartLabel;
-    const allDefault = selectedYear === "All" && selectedJurisdiction === "All" && selectedMethod === "All";
+    let label;
 
-    if (allDefault) {
-      const grouped = d3.rollups(filteredData, v => d3.sum(v, d => d.FINES), d => d.DETECTION_METHOD);
-      pieData = Object.fromEntries(grouped);
-      chartLabel = "Detection Method Breakdown";
-    } else if (selectedYear !== "All" && selectedMethod !== "All" && selectedJurisdiction !== "All") {
-      const total = d3.sum(filteredData, d => d.FINES);
-      pieData = { [selectedJurisdiction]: total };
-      chartLabel = `${selectedJurisdiction} – Total Fines (${selectedYear})`;
-    } else if (selectedYear !== "All" && selectedMethod !== "All") {
+    if (selectedYear !== "All" && selectedMethod !== "All") {
       const grouped = d3.rollups(filteredData, v => d3.sum(v, d => d.FINES), d => d.JURISDICTION);
       pieData = Object.fromEntries(grouped);
-      chartLabel = `${selectedMethod} Detection Method – Jurisdiction & Fines (${selectedYear})`;
+      label = `${selectedMethod} – Total Fines by Jurisdiction (${selectedYear})`;
     } else if (selectedYear !== "All") {
       const grouped = d3.rollups(filteredData, v => d3.sum(v, d => d.FINES), d => d.DETECTION_METHOD);
       pieData = Object.fromEntries(grouped);
-      chartLabel = `Detection Methods in ${selectedYear}`;
+      label = `Detection Method Breakdown (${selectedYear})`;
+    } else {
+      const grouped = d3.rollups(filteredData, v => d3.sum(v, d => d.FINES), d => d.DETECTION_METHOD);
+      pieData = Object.fromEntries(grouped);
+      label = "Detection Method Breakdown (All Years)";
     }
 
     if (!pieData || Object.keys(pieData).length === 0 || d3.sum(Object.values(pieData)) === 0) {
@@ -94,8 +56,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       return;
     }
 
-    // Insert buttons
-    d3.select("#donut-chart h2").html(`${chartLabel}
+    d3.select("#donut-chart h2").html(`${label}
       <button class="fullscreen-btn" data-chart="donutChartContainer">⛶</button>
       <button class="export-btn" data-chart="donutChartContainer" data-type="donut">Export ⬇</button>
     `);
@@ -109,7 +70,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .append("g")
       .attr("transform", `translate(${width / 2}, ${(height + 40) / 2})`);
 
-    const color = d3.scaleOrdinal().domain(Object.keys(pieData)).range(d3.schemeTableau10);
+    const color = d3.scaleOrdinal().domain(Object.keys(pieData)).range(d3.schemeSet2);
     const pie = d3.pie().value(d => d[1]);
     const arc = d3.arc().innerRadius(radius * 0.5).outerRadius(radius * 0.9);
     const outerArc = d3.arc().innerRadius(radius * 1.05).outerRadius(radius * 1.05);
@@ -120,27 +81,29 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .append("g")
       .attr("class", "arc");
 
+    const tooltip = d3.select("body")
+      .append("div")
+      .attr("class", "donut-tooltip")
+      .style("position", "absolute")
+      .style("background", "white")
+      .style("padding", "10px")
+      .style("border", "1px solid #ccc")
+      .style("border-radius", "4px")
+      .style("font-size", "13px")
+      .style("pointer-events", "none")
+      .style("opacity", 0)
+      .style("z-index", 1000);
+
     arcs.append("path")
       .attr("d", arc)
       .attr("fill", d => color(d.data[0]))
       .on("mouseover", function (event, d) {
-        const label = d.data[0];
-        const total = d.data[1];
-        const breakdown = allDefault
-          ? d3.rollups(fullData.filter(row => row.DETECTION_METHOD === label), v => d3.sum(v, d => d.FINES), d => d.JURISDICTION)
-              .map(([j, f]) => `• ${j}: ${f.toLocaleString()}`).join("<br>")
-          : null;
-
-        tooltip.html(
-          allDefault
-            ? `<strong>Method:</strong> ${label}<br><strong>Total Fines:</strong> ${total.toLocaleString()}<br><br><strong>Jurisdictions:</strong><br>${breakdown}`
-            : `<strong>${label}</strong><br>Fines: ${total.toLocaleString()}`
-        );
-        tooltip.transition().duration(150).style("opacity", 1)
+        tooltip.html(`<strong>${d.data[0]}</strong><br>Fines: ${d.data[1].toLocaleString()}`)
           .style("left", (event.pageX + 10) + "px")
-          .style("top", (event.pageY - 30) + "px");
+          .style("top", (event.pageY - 30) + "px")
+          .transition().duration(150).style("opacity", 1);
       })
-      .on("mousemove", event => {
+      .on("mousemove", function (event) {
         tooltip.style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 30) + "px");
       })
       .on("mouseout", () => {
@@ -175,40 +138,9 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       legend.append("text").attr("x", 20).attr("y", i * 20 + 10).text(key).style("font-size", "12px").attr("alignment-baseline", "middle");
     });
 
-    // Rebind the export & fullscreen buttons
-    document.querySelectorAll(".fullscreen-btn").forEach(button => {
-      button.onclick = () => {
-        const chartId = button.getAttribute("data-chart");
-        const chartElement = document.getElementById(chartId);
-        const modal = document.getElementById("chartModal");
-        const modalContent = document.getElementById("chartModalContent");
-        if (chartElement && modal && modalContent) {
-          modalContent.innerHTML = "";
-          const clone = chartElement.cloneNode(true);
-          clone.style.height = "500px";
-          modalContent.appendChild(clone);
-          modal.style.display = "block";
-        }
-      };
-    });
-
-    document.querySelectorAll(".export-btn").forEach(button => {
-      button.onclick = () => {
-        const chartId = button.getAttribute("data-chart");
-        const chartType = button.getAttribute("data-type");
-        const chartElement = document.getElementById(chartId);
-        const svg = chartElement?.querySelector("svg");
-        if (!svg) return alert("Chart not found.");
-        const svgData = new XMLSerializer().serializeToString(svg);
-        const filters = {
-          year: document.getElementById("yearFilter")?.value || "All",
-          method: document.getElementById("methodFilter")?.value || "All",
-          jurisdiction: document.getElementById("jurisdictionFilter")?.value || "All"
-        };
-        localStorage.setItem("exportChartData", JSON.stringify({ chartType, svg: svgData, filters }));
-        window.open("export.html", "_blank");
-      };
-    });
+    if (typeof updateSummaryCards === "function") {
+      updateSummaryCards(selectedYear, selectedJurisdiction, selectedMethod);
+    }
   };
 
   updateDonut("All", "All", "All");

@@ -1,5 +1,11 @@
 let updateBarChart;
 
+const methodColors = {
+  "Police issued": "#e74c3c",
+  "Mobile camera": "#27ae60",
+  "Other": "#999"
+};
+
 d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data => {
   data.forEach(d => {
     d.YEAR = +d.YEAR;
@@ -17,19 +23,20 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       filtered = filtered.filter(d => d.DETECTION_METHOD === selectedMethod);
     }
 
-    const grouped = d3.rollups(
-      filtered,
-      v => d3.sum(v, d => d.FINES),
-      d => d.DETECTION_METHOD
-    ).map(([method, total]) => ({ DETECTION_METHOD: method, FINES: total }))
-     .sort((a, b) => b.FINES - a.FINES);
+    const total = d3.sum(filtered, d => d.FINES);
+    const barLabel = selectedMethod === "All" ? `All Fines (${selectedYear})` : `${selectedMethod} (${selectedYear})`;
+
+    const grouped = [{
+      label: barLabel,
+      FINES: total,
+      DETECTION_METHOD: selectedMethod
+    }];
 
     d3.select("#barChartContainer").select("svg")?.remove();
     d3.select("#barChartContainer").select("div")?.remove();
     d3.select("#barChartContainer").select(".no-data-warning")?.remove();
 
-    // No data check
-    if (!grouped || grouped.length === 0 || d3.sum(grouped.map(d => d.FINES)) === 0) {
+    if (!grouped.length || total === 0) {
       d3.select("#barChartContainer")
         .append("div")
         .attr("class", "no-data-warning")
@@ -55,7 +62,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
     const x = d3.scaleBand()
-      .domain(grouped.map(d => d.DETECTION_METHOD))
+      .domain(grouped.map(d => d.label))
       .range([0, width])
       .padding(0.3);
 
@@ -63,7 +70,6 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .domain([0, d3.max(grouped, d => d.FINES)]).nice()
       .range([height, 0]);
 
-    // Axes
     svg.append("g")
       .attr("transform", `translate(0,${height})`)
       .call(d3.axisBottom(x))
@@ -74,7 +80,6 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
     svg.append("g")
       .call(d3.axisLeft(y));
 
-    // Axis Labels
     svg.append("text")
       .attr("x", width / 2)
       .attr("y", height + 50)
@@ -88,7 +93,6 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .attr("text-anchor", "middle")
       .text("Number of Fines");
 
-    // Tooltip
     const tooltip = d3.select("#barChartContainer")
       .append("div")
       .style("position", "absolute")
@@ -100,28 +104,29 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .style("pointer-events", "none")
       .style("opacity", 0);
 
-    // Bars
     svg.selectAll("rect")
       .data(grouped)
       .enter()
       .append("rect")
-      .attr("x", d => x(d.DETECTION_METHOD))
+      .attr("x", d => x(d.label))
       .attr("y", d => y(d.FINES))
       .attr("width", x.bandwidth())
       .attr("height", d => height - y(d.FINES))
-      .attr("fill", "#3498db")
+      .attr("fill", d => methodColors[d.DETECTION_METHOD] || "#999")
+      .style("cursor", "pointer")
+      .on("click", (event, d) => {
+        const { year = "All" } = window.selectedState || {};
+        window.selectedState.jurisdiction = "All";
+        if (typeof updateDonut === "function") updateDonut(year, "All", d.DETECTION_METHOD);
+        if (typeof updateSummaryCards === "function") updateSummaryCards(year, "All", d.DETECTION_METHOD);
+      })
       .on("mouseover", (event, d) => {
         tooltip.transition().duration(150).style("opacity", 1);
-        tooltip.html(
-          `<strong>Method:</strong> ${d.DETECTION_METHOD}<br>
-           <strong>Fines:</strong> ${d.FINES.toLocaleString()}${selectedYear !== "All" ? `<br><strong>Year:</strong> ${selectedYear}` : ""}`
-        )
-        .style("left", (event.pageX + 10) + "px")
-        .style("top", (event.pageY - 30) + "px");
+        tooltip.html(`<strong>${d.label}</strong><br>Fines: ${d.FINES.toLocaleString()}`)
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY - 30) + "px");
       })
-      .on("mouseout", () => {
-        tooltip.transition().duration(200).style("opacity", 0);
-      });
+      .on("mouseout", () => tooltip.transition().duration(200).style("opacity", 0));
   };
 
   updateBarChart("All", "All");
