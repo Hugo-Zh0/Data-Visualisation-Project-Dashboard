@@ -122,38 +122,37 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .style("z-index", 1000);
 
     arcs.append("path")
-    .attr("d", arc)
-    .attr("fill", d => color(d.data[0]))
-    .style("cursor", "pointer")
-    .on("mouseover", function (event, d) {
-      tooltip.html(`<strong>${d.data[0]}</strong><br>Fines: ${d.data[1].toLocaleString()}`)
-        .style("left", (event.pageX + 10) + "px")
-        .style("top", (event.pageY - 30) + "px")
-        .transition().duration(150).style("opacity", 1);
-    })
-    .on("mousemove", function (event) {
-      tooltip.style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 30) + "px");
-    })
-    .on("mouseout", () => {
-      tooltip.transition().duration(200).style("opacity", 0);
-    })
-    .on("click", function (event, d) {
-    const method = d.data[0];
-    const year = window.selectedState?.year || "All";
-    const currentMethod = window.selectedState?.method || "All";
+      .attr("d", arc)
+      .attr("fill", d => color(d.data[0]))
+      .style("cursor", "pointer")
+      .on("mouseover", function (event, d) {
+        tooltip.html(`<strong>${d.data[0]}</strong><br>Fines: ${d.data[1].toLocaleString()}`)
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY - 30) + "px")
+          .transition().duration(150).style("opacity", 1);
+      })
+      .on("mousemove", function (event) {
+        tooltip.style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 30) + "px");
+      })
+      .on("mouseout", () => {
+        tooltip.transition().duration(200).style("opacity", 0);
+      })
+      .on("click", function (event, d) {
+        const method = d.data[0];
+        const year = window.selectedState?.year || "All";
+        const currentMethod = window.selectedState?.method || "All";
 
-    // Only allow drill-down from method to jurisdiction (not from jurisdiction again)
-    const isCurrentlyJurisdiction = (year !== "All" && currentMethod !== "All");
+        const isCurrentlyJurisdiction = (year !== "All" && currentMethod !== "All");
 
-    if (method && method !== "All" && !isCurrentlyJurisdiction) {
-      const fallbackYear = year === "All"
-        ? Math.max(...fullData.map(d => d.YEAR))
-        : year;
+        if (method && method !== "All" && !isCurrentlyJurisdiction) {
+          const fallbackYear = year === "All"
+            ? Math.max(...fullData.map(d => d.YEAR))
+            : year;
 
-      tooltip.transition().duration(100).style("opacity", 0); // hide tooltip
-      updateDonut(fallbackYear, "All", method);
-      }
-    });
+          tooltip.transition().duration(100).style("opacity", 0);
+          updateDonut(fallbackYear, "All", method);
+        }
+      });
 
     arcs.append("text")
       .each(function (d, i) {
@@ -186,6 +185,50 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
     if (typeof updateSummaryCards === "function") {
       updateSummaryCards(selectedYear, selectedJurisdiction, selectedMethod);
     }
+
+    // ✅ Attach event handlers for buttons added dynamically
+    document.querySelectorAll(".fullscreen-btn").forEach(button => {
+      button.onclick = () => {
+        const chartId = button.getAttribute("data-chart");
+        const chartElement = document.getElementById(chartId);
+        const modal = document.getElementById("chartModal");
+        const modalContent = document.getElementById("chartModalContent");
+        if (chartElement && modal && modalContent) {
+          modalContent.innerHTML = "";
+          const clone = chartElement.cloneNode(true);
+          clone.style.height = "500px";
+          clone.style.overflow = "auto";
+          modalContent.appendChild(clone);
+          modal.style.display = "block";
+        }
+      };
+    });
+
+    document.querySelectorAll(".export-btn").forEach(button => {
+      button.onclick = () => {
+        const chartId = button.getAttribute("data-chart");
+        const chartType = button.getAttribute("data-type");
+        const chartElement = document.getElementById(chartId);
+        const svg = chartElement?.querySelector("svg");
+
+        if (!svg) return alert("Chart not found.");
+
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const filters = {
+          year: window.selectedState?.year || "All",
+          method: window.selectedState?.method || "All",
+          jurisdiction: window.selectedState?.jurisdiction || "All"
+        };
+
+        localStorage.setItem("exportChartData", JSON.stringify({
+          chartType,
+          svg: svgData,
+          filters
+        }));
+
+        window.open("export.html", "_blank");
+      };
+    });
   };
 
   updateDonut("All", "All", "All");
