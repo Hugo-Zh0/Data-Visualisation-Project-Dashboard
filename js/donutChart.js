@@ -186,7 +186,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       updateSummaryCards(selectedYear, selectedJurisdiction, selectedMethod);
     }
 
-    // ✅ Attach event handlers for buttons added dynamically
+    // Attach event handlers for buttons added dynamically
     document.querySelectorAll(".fullscreen-btn").forEach(button => {
       button.onclick = () => {
         const chartId = button.getAttribute("data-chart");
