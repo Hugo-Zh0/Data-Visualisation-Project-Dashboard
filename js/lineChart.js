@@ -11,15 +11,22 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       filtered = filtered.filter(d => d.JURISDICTION === selectedJurisdiction);
     }
 
-    const allYears = [...new Set(data.map(d => d.YEAR))].sort((a, b) => a - b);
+    let allYears;
+    if (selectedYear !== "All") {
+      const y = +selectedYear;
+      allYears = [y - 1, y, y + 1];
+    } else {
+      allYears = [...new Set(data.map(d => d.YEAR))].sort((a, b) => a - b);
+    }
 
     let showAll = selectedMethod === "All";
 
-    const totals = showAll ? d3.rollups(
-      filtered,
-      v => d3.sum(v, d => d.FINES),
-      d => d.YEAR
-    ).map(([year, total]) => ({ YEAR: +year, FINES: total })) : [];
+    const totals = showAll
+    ? allYears.map(year => {
+        const sum = d3.sum(filtered.filter(d => d.YEAR === year), d => d.FINES);
+        return { YEAR: year, FINES: sum };
+      })
+    : [];
 
     const policeData = allYears.map(year => {
       const sum = d3.sum(filtered.filter(d => d.DETECTION_METHOD === "Police issued" && d.YEAR === year), d => d.FINES);
