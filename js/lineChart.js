@@ -7,51 +7,48 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
   window.updateLineChart = function (selectedYear = "All", selectedJurisdiction = "All", selectedMethod = "All") {
     let filtered = data;
 
-    if (selectedYear !== "All") {
-      filtered = filtered.filter(d => d.YEAR === +selectedYear);
-    }
-
     if (selectedJurisdiction !== "All") {
       filtered = filtered.filter(d => d.JURISDICTION === selectedJurisdiction);
     }
 
-    if (selectedMethod !== "All") {
-      filtered = filtered.filter(d => d.DETECTION_METHOD === selectedMethod);
-    }
-
-    let totals;
-
+    let allYears;
     if (selectedYear !== "All") {
-      const targetYear = +selectedYear;
-      const yearsToInclude = [targetYear - 1, targetYear, targetYear + 1];
-
-      let extendedFiltered = data.filter(d =>
-        yearsToInclude.includes(+d.YEAR) &&
-        (selectedJurisdiction === "All" || d.JURISDICTION === selectedJurisdiction) &&
-        (selectedMethod === "All" || d.DETECTION_METHOD === selectedMethod)
-      );
-
-      totals = d3.rollups(
-        extendedFiltered,
-        v => d3.sum(v, d => d.FINES),
-        d => d.YEAR
-      ).map(([year, total]) => ({ YEAR: +year, FINES: total }));
+      const y = +selectedYear;
+      allYears = [y - 1, y, y + 1];
     } else {
-      totals = d3.rollups(
-        filtered,
-        v => d3.sum(v, d => d.FINES),
-        d => d.YEAR
-      ).map(([year, total]) => ({ YEAR: +year, FINES: total }));
+      allYears = [...new Set(data.map(d => d.YEAR))].sort((a, b) => a - b);
     }
 
-    totals = totals.sort((a, b) => a.YEAR - b.YEAR);
+    let showAll = selectedMethod === "All";
 
-    // Clear chart and warning
+    const totals = showAll
+    ? allYears.map(year => {
+        const sum = d3.sum(filtered.filter(d => d.YEAR === year), d => d.FINES);
+        return { YEAR: year, FINES: sum };
+      })
+    : [];
+
+    const policeData = allYears.map(year => {
+      const sum = d3.sum(filtered.filter(d => d.DETECTION_METHOD === "Police issued" && d.YEAR === year), d => d.FINES);
+      return { YEAR: year, FINES: sum };
+    });
+
+    const cameraData = allYears.map(year => {
+      const sum = d3.sum(filtered.filter(d => d.DETECTION_METHOD === "Mobile camera" && d.YEAR === year), d => d.FINES);
+      return { YEAR: year, FINES: sum };
+    });
+
     d3.select("#lineChartContainer").select("svg")?.remove();
     d3.select("#lineChartContainer").select("div")?.remove();
     d3.select("#lineChartContainer").select(".no-data-warning")?.remove();
 
-    if (!totals || totals.length === 0 || d3.sum(totals.map(d => d.FINES)) === 0) {
+    const yMax = d3.max([
+      ...totals.map(d => d.FINES),
+      ...policeData.map(d => d.FINES),
+      ...cameraData.map(d => d.FINES)
+    ]);
+
+    if (!yMax || yMax === 0) {
       d3.select("#lineChartContainer")
         .append("div")
         .attr("class", "no-data-warning")
@@ -63,7 +60,7 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       return;
     }
 
-    const margin = { top: 40, right: 50, bottom: 70, left: 70 };
+    const margin = { top: 40, right: 150, bottom: 70, left: 70 };
     const width = 800 - margin.left - margin.right;
     const height = 240 - margin.top - margin.bottom;
 
@@ -76,11 +73,8 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const xYears = totals.map(d => d.YEAR);
-    const yMax = d3.max(totals, d => d.FINES);
-
     const x = d3.scalePoint()
-      .domain(xYears)
+      .domain(allYears)
       .range([0, width])
       .padding(0.5);
 
@@ -92,14 +86,12 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .x(d => x(d.YEAR))
       .y(d => y(d.FINES));
 
-    // Axes
     svg.append("g")
       .attr("transform", `translate(0,${height})`)
       .call(d3.axisBottom(x).tickFormat(d3.format("d")));
 
     svg.append("g").call(d3.axisLeft(y));
 
-    // Axis Labels
     svg.append("text")
       .attr("text-anchor", "middle")
       .attr("x", width / 2)
@@ -111,17 +103,8 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .attr("transform", `rotate(-90)`)
       .attr("x", -height / 2)
       .attr("y", -50)
-      .text("Total Fines (Mobile Phone Use)");
+      .text("Number of Fines");
 
-    // Line path
-    svg.append("path")
-      .datum(totals)
-      .attr("fill", "none")
-      .attr("stroke", "#007acc")
-      .attr("stroke-width", 2)
-      .attr("d", line);
-
-    // Tooltip
     const tooltip = d3.select("#lineChartContainer")
       .append("div")
       .style("position", "absolute")
@@ -133,43 +116,50 @@ d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data 
       .style("pointer-events", "none")
       .style("opacity", 0);
 
-    // Dots
-    svg.selectAll("circle")
-      .data(totals)
-      .enter()
-      .append("circle")
-      .attr("cx", d => x(d.YEAR))
-      .attr("cy", d => y(d.FINES))
-      .attr("r", d => (selectedYear !== "All" && +selectedYear === d.YEAR) ? 7 : 5)
-      .attr("fill", d => (selectedYear !== "All" && +selectedYear === d.YEAR) ? "#e67e22" : "#007acc")
-      .on("mouseover", (event, d) => {
-        const isSelected = selectedYear !== "All" && +selectedYear === d.YEAR;
-        tooltip.transition().duration(150).style("opacity", 1);
-        tooltip.html(
-          `<strong>Year:</strong> ${d.YEAR}<br>
-           <strong>Fines:</strong> ${d.FINES.toLocaleString()}${isSelected ? "<br><em>(Selected)</em>" : ""}`
-        )
-          .style("left", (event.pageX + 10) + "px")
-          .style("top", (event.pageY - 30) + "px");
-      })
-      .on("mouseout", () => {
-        tooltip.transition().duration(200).style("opacity", 0);
-      });
+    const allDots = [];
+    if (showAll) allDots.push({ data: totals, color: "#007acc", label: "All" });
+    if (selectedMethod === "All" || selectedMethod === "Police issued") allDots.push({ data: policeData, color: "#e74c3c", label: "Police issued" });
+    if (selectedMethod === "All" || selectedMethod === "Mobile camera") allDots.push({ data: cameraData, color: "#27ae60", label: "Mobile camera" });
 
-    // Legend
-    svg.append("rect")
-      .attr("x", width - 130)
-      .attr("y", -10)
-      .attr("width", 15)
-      .attr("height", 15)
-      .attr("fill", "#007acc");
+    allDots.forEach(group => {
+      svg.append("path")
+        .datum(group.data)
+        .attr("fill", "none")
+        .attr("stroke", group.color)
+        .attr("stroke-width", 2)
+        .attr("d", line);
 
-    svg.append("text")
-      .attr("x", width - 110)
-      .attr("y", 2)
-      .text("Mobile Phone Fines")
-      .style("font-size", "12px")
-      .attr("alignment-baseline", "middle");
+      svg.selectAll(`.dot-${group.label.replace(/\s/g, "")}`)
+        .data(group.data)
+        .enter()
+        .append("circle")
+        .attr("class", `dot-${group.label.replace(/\s/g, "")}`)
+        .attr("cx", d => x(d.YEAR))
+        .attr("cy", d => y(d.FINES))
+        .attr("r", 5)
+        .attr("fill", group.color)
+        .style("cursor", "pointer")
+        .on("click", (event, d) => {
+          window.selectedState = { year: d.YEAR, method: group.label, jurisdiction: "All" };
+          if (typeof updateBarChart === "function") updateBarChart(d.YEAR, group.label);
+          if (typeof updateSummaryCards === "function") updateSummaryCards(d.YEAR, "All", group.label);
+        })
+        .on("mouseover", (event, d) => {
+          tooltip.transition().duration(150).style("opacity", 1);
+          tooltip.html(`<strong>${group.label}</strong><br>Year: ${d.YEAR}<br>Fines: ${d.FINES.toLocaleString()}`)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 30) + "px");
+        })
+        .on("mouseout", () => tooltip.transition().duration(200).style("opacity", 0));
+    });
+
+    const legend = svg.append("g").attr("transform", `translate(${width + 20}, 10)`);
+    let yOffset = 0;
+    allDots.forEach((group, i) => {
+      legend.append("rect").attr("x", 0).attr("y", yOffset).attr("width", 12).attr("height", 12).attr("fill", group.color);
+      legend.append("text").attr("x", 20).attr("y", yOffset + 10).text(group.label).style("font-size", "12px");
+      yOffset += 20;
+    });
   };
 
   window.updateLineChart("All", "All", "All");

@@ -34,6 +34,33 @@ document.addEventListener("DOMContentLoaded", function () {
   methodSelect?.addEventListener("change", applyFilters);
   resetButton?.addEventListener("click", resetFilters);
 
+    d3.csv("data/mobile_fines_by_detection_method_jurisdiction_year.csv").then(data => {
+    const years = Array.from(new Set(data.map(d => +d.YEAR))).sort((a, b) => a - b);
+    const jurisdictions = Array.from(new Set(data.map(d => d.JURISDICTION))).sort();
+
+    // Clear and repopulate yearFilter
+    if (yearSelect) {
+      yearSelect.innerHTML = '<option value="All">All</option>';
+      years.forEach(year => {
+        const opt = document.createElement("option");
+        opt.value = year;
+        opt.textContent = year;
+        yearSelect.appendChild(opt);
+      });
+    }
+
+    // Clear and repopulate jurisdictionFilter
+    if (jurisdictionSelect) {
+      jurisdictionSelect.innerHTML = '<option value="All">All</option>';
+      jurisdictions.forEach(j => {
+        const opt = document.createElement("option");
+        opt.value = j;
+        opt.textContent = j;
+        jurisdictionSelect.appendChild(opt);
+      });
+    }
+  });
+
   setTimeout(applyFilters, 50);
 });
 
